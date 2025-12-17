@@ -13,6 +13,7 @@ const fs = require('fs');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const candidateRoutes = require('./routes/candidate');
+const profileRoutes = require('./routes/profile');
 
 // Import database service
 const { pool, getDashboardStats } = require('./services/database');
@@ -109,12 +110,9 @@ app.get('/api/health', async (req, res) => {
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
-
-// Admin routes
 app.use('/api/admin', adminRoutes);
-
-// Candidate routes
 app.use('/api/candidate', candidateRoutes);
+app.use('/api/me', profileRoutes);
 
 // ============================================
 // BACKWARD COMPATIBILITY ROUTES
@@ -351,7 +349,7 @@ app.post('/api/generate-pdf', async (req, res) => {
             });
         }
 
-        // Use the existing PDF generator if available
+        // Generate PDF on-the-fly from database data
         const { processPsychometricData, generateComprehensivePDF } = require('./comprehensivePdfGenerator');
         const { generateBeyondersPDF } = require('./beyondersPdfGenerator');
 
@@ -396,27 +394,15 @@ app.post('/api/generate-pdf', async (req, res) => {
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const fileName = `strength-report-${response.user_name.replace(/\s+/g, '_')}-${timestamp}.pdf`;
-        const filePath = path.join(__dirname, 'reports', `response-${testResponseId}.pdf`);
-
-        // Save PDF to filesystem
-        try {
-            fs.writeFileSync(filePath, result.buffer);
-            console.log(`✅ PDF saved to: ${filePath}`);
-        } catch (saveError) {
-            console.warn(`⚠️ Failed to save PDF to filesystem:`, saveError);
-            // Continue even if save fails - user still gets download
-        }
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.send(result.buffer);
-
-        console.log('✅ PDF sent successfully');
     } catch (error) {
-        console.error('❌ Error generating PDF:', error);
+        console.error('PDF generation error:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to generate PDF report',
+            error: 'Failed to generate PDF',
         });
     }
 });

@@ -4,6 +4,7 @@ import TestRunner from './TestRunner';
 import AdaptiveTestRunner from './AdaptiveTestRunner';
 import Login from './Login';
 import Dashboard from './Dashboard';
+import CandidateGate from './components/CandidateGate';
 import { apiDB } from './lib/apiDatabase';
 
 import BeyondersTestRunner from './BeyondersTestRunner';
@@ -45,7 +46,8 @@ function TestDispatcher() {
         try {
           const result = await apiDB.validateTestToken(assignmentId, token);
           if (result.success && result.assignment) {
-            setTestType(result.assignment.testType);
+            // Store the full assignment data including testSlug and runner
+            setTestType(result.assignment.testSlug || result.assignment.engineType || result.assignment.testType);
             setTestConfig(result.assignment.config || {});
 
             if (result.user) {
@@ -119,9 +121,29 @@ function TestDispatcher() {
     );
   }
 
-  const type = String(testType || '').trim();
+  const slug = String(testType || '').trim();
 
-  if (type === 'adaptive') {
+  console.log('🔍 Test Dispatcher - Routing Decision:', { slug, testConfig });
+
+  // Explicit slug-based routing (no silent fallbacks)
+  if (slug === 'beyonders_science' || slug === 'beyonders_non_science') {
+    console.log('✅ Routing to BeyondersTestRunner:', slug);
+    return (
+      <BeyondersTestRunner
+        assignmentId={assignmentId}
+        token={activeToken}
+        testType={slug as any}
+      />
+    );
+  }
+
+  if (slug === 'strength360' || slug === 'psychometric') {
+    console.log('✅ Routing to Strength TestRunner');
+    return <TestRunner assignmentId={assignmentId} token={activeToken} />;
+  }
+
+  if (slug === 'adaptive') {
+    console.log('✅ Routing to AdaptiveTestRunner');
     return (
       <AdaptiveTestRunner
         assignmentId={assignmentId}
@@ -133,18 +155,28 @@ function TestDispatcher() {
     );
   }
 
-  if (type.includes('beyonders_science') || type.includes('beyonders_non_science')) {
-    return (
-      <BeyondersTestRunner
-        assignmentId={assignmentId}
-        token={activeToken}
-        testType={type as any}
-      />
-    );
-  }
-
-  // Default to Psychometric TestRunner
-  return <TestRunner assignmentId={assignmentId} token={activeToken} />;
+  // Unknown test type - show error instead of silent fallback
+  console.error('❌ Unknown test slug:', slug);
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-md">
+        <div className="text-red-500 text-5xl mb-4">🚫</div>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Unknown Test Type</h2>
+        <p className="text-gray-600 mb-4">
+          This test type "<span className="font-mono text-sm">{slug}</span>" is not recognized by the system.
+        </p>
+        <p className="text-sm text-gray-500 mb-4">
+          Please contact your administrator for assistance.
+        </p>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
@@ -160,7 +192,7 @@ function App() {
         path="/dashboard"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <CandidateGate />
           </PrivateRoute>
         }
       />

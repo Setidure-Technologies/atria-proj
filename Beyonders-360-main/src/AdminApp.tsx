@@ -35,6 +35,8 @@ function AdminApp() {
     const [currentView, setCurrentView] = useState<View>('dashboard');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    console.log("AdminApp loaded - VERSION 2");
+
     // Check for existing token on mount
     useEffect(() => {
         const storedToken = localStorage.getItem('atria_admin_token');

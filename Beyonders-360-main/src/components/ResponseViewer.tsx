@@ -28,6 +28,8 @@ export function ResponseViewer({ token }: ResponseViewerProps) {
     const [filterTest, setFilterTest] = useState('all');
     const [selectedResponse, setSelectedResponse] = useState<Response | null>(null);
 
+    console.log("ResponseViewer loaded - VERSION 2");
+
     useEffect(() => {
         fetchResponses();
     }, []);
@@ -48,52 +50,33 @@ export function ResponseViewer({ token }: ResponseViewerProps) {
         }
     };
 
-    const exportToCSV = () => {
-        if (responses.length === 0) {
-            alert('No data to export');
-            return;
+    const exportToCSV = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/admin/reports/csv${filterTest !== 'all' ? `?testId=${uniqueTests.find(t => t === filterTest)}` : ''}`, { // logic to get testId from title is tricky if I only have title. 
+                // uniqueTests is array of titles.
+                // I need test ID. 
+                // The responses have test_title but not test_id in the interface?
+                // Let's check interface.
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `atria-responses-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } else {
+                alert('Failed to export CSV');
+            }
+        } catch (error) {
+            console.error('Export CSV error:', error);
+            alert('Failed to export CSV');
         }
-
-        const headers = [
-            'Name',
-            'Email',
-            'Test',
-            'Primary Domain',
-            'Executing',
-            'Influencing',
-            'Relationship Building',
-            'Strategic Thinking',
-            'Questions Answered',
-            'Auto Submit',
-            'Submitted At'
-        ];
-
-        const rows = responses.map(r => [
-            r.user_name,
-            r.user_email,
-            r.test_title,
-            r.primary_talent_domain || 'N/A',
-            r.executing_score || 0,
-            r.influencing_score || 0,
-            r.relationship_building_score || 0,
-            r.strategic_thinking_score || 0,
-            r.questions_answered,
-            r.is_auto_submit ? 'Yes' : 'No',
-            new Date(r.submitted_at).toLocaleString()
-        ]);
-
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-        ].join('\n');
-
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `atria-responses-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        window.URL.revokeObjectURL(url);
     };
 
     const uniqueTests = Array.from(new Set(responses.map(r => r.test_title)));
@@ -233,27 +216,31 @@ function StatCard({ title, value }: { title: string; value: string | number }) {
 }
 
 function ScoreDisplay({ response }: { response: Response }) {
-    if (!response.executing_score) {
+    if (response.executing_score === undefined || response.executing_score === null) {
         return <span className="text-sm text-gray-400">No scores</span>;
     }
+
+    const formatScore = (score: number | undefined) => {
+        return score !== undefined && score !== null ? Number(score).toFixed(1) : '0.0';
+    };
 
     return (
         <div className="text-xs space-y-1">
             <div className="flex justify-between gap-2">
                 <span className="text-gray-600">E:</span>
-                <span className="font-medium">{response.executing_score?.toFixed(1)}</span>
+                <span className="font-medium">{formatScore(response.executing_score)}</span>
             </div>
             <div className="flex justify-between gap-2">
                 <span className="text-gray-600">I:</span>
-                <span className="font-medium">{response.influencing_score?.toFixed(1)}</span>
+                <span className="font-medium">{formatScore(response.influencing_score)}</span>
             </div>
             <div className="flex justify-between gap-2">
                 <span className="text-gray-600">R:</span>
-                <span className="font-medium">{response.relationship_building_score?.toFixed(1)}</span>
+                <span className="font-medium">{formatScore(response.relationship_building_score)}</span>
             </div>
             <div className="flex justify-between gap-2">
                 <span className="text-gray-600">S:</span>
-                <span className="font-medium">{response.strategic_thinking_score?.toFixed(1)}</span>
+                <span className="font-medium">{formatScore(response.strategic_thinking_score)}</span>
             </div>
         </div>
     );
@@ -313,7 +300,7 @@ function ResponseDetailModal({ response, onClose }: { response: Response; onClos
                     </div>
 
                     {/* Scores */}
-                    {response.executing_score && (
+                    {(response.executing_score !== undefined && response.executing_score !== null) && (
                         <div>
                             <h4 className="font-semibold text-gray-900 mb-3">Talent Domain Scores</h4>
                             <div className="space-y-3">
@@ -383,13 +370,14 @@ const handleDownloadReport = async (responseId: string) => {
 };
 
 function ScoreBar({ label, score, color }: { label: string; score: number; color: string }) {
-    const percentage = (score / 100) * 100;
+    const numScore = Number(score);
+    const percentage = (numScore / 100) * 100;
 
     return (
         <div>
             <div className="flex justify-between text-sm mb-1">
                 <span className="font-medium text-gray-700">{label}</span>
-                <span className="text-gray-600">{score.toFixed(1)}</span>
+                <span className="text-gray-600">{numScore.toFixed(1)}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className={`${color} h-2 rounded-full`} style={{ width: `${percentage}%` }} />

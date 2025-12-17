@@ -22,6 +22,10 @@ COPY index.html ./
 COPY admin.html ./
 COPY .env.production ./
 
+# Build arguments
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build the frontend
 RUN npm run build
 
@@ -56,6 +60,10 @@ COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 COPY backend/server.js ./backend/
 COPY backend/pdfGenerator.js ./backend/
 COPY backend/comprehensivePdfGenerator.js ./backend/
+COPY backend/beyondersPdfGenerator.js ./backend/
+COPY backend/routes/ ./backend/routes/
+COPY backend/middleware/ ./backend/middleware/
+COPY backend/services/ ./backend/services/
 COPY backend/data/ ./backend/data/
 COPY backend/reports/ ./backend/reports/
 

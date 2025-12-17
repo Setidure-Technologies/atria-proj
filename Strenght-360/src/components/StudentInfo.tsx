@@ -130,6 +130,7 @@ interface AppState {
 
 interface StudentInfoProps {
   onStart: (name: string, email: string, studentData?: StudentData) => void;
+  initialData?: any;
 }
 
 // Utility functions (keep existing ones)
@@ -165,33 +166,33 @@ const getAddressFromCoordinates = async (
 };
 
 // Main Component
-export function StudentInfo({ onStart }: StudentInfoProps) {
+export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
   // State management
   const [state, setState] = useState<AppState>({
     step: 'info',
 
     // Basic Info
-    name: '',
-    email: '',
-    phone: '',
+    name: initialData?.name || '',
+    email: initialData?.email || '',
+    phone: initialData?.phone || '',
 
     // University Info
-    institution: '',
-    boardOfStudy: '',
-    dateOfBirth: '',
-    parentName: '',
-    parentOccupation: '',
-    annualIncome: '',
-    fullAddress: '',
+    institution: initialData?.institution || '',
+    boardOfStudy: initialData?.boardOfStudy || '',
+    dateOfBirth: initialData?.dateOfBirth || '',
+    parentName: initialData?.parentName || '',
+    parentOccupation: initialData?.parentOccupation || '',
+    annualIncome: initialData?.annualIncome || '',
+    fullAddress: initialData?.fullAddress || '',
 
     // Academic
-    tenthGrade: {
+    tenthGrade: initialData?.tenthGrade || {
       mathematics: '',
       physics: '',
       chemistry: '',
       biology: ''
     },
-    eleventhGrade: {
+    eleventhGrade: initialData?.eleventhGrade || {
       mathematics: '',
       physics: '',
       chemistry: '',
@@ -199,7 +200,7 @@ export function StudentInfo({ onStart }: StudentInfoProps) {
     },
 
     // Extracurricular
-    extracurricular: {
+    extracurricular: initialData?.extracurricular || {
       sports: '',
       leadership: '',
       cultural: '',
@@ -208,7 +209,7 @@ export function StudentInfo({ onStart }: StudentInfoProps) {
     },
 
     // Interests
-    interests: {
+    interests: initialData?.interests || {
       aiMlDataScience: false,
       energySustainability: false,
       emobilityIot: false,
@@ -218,14 +219,14 @@ export function StudentInfo({ onStart }: StudentInfoProps) {
     },
 
     // Declaration
-    signature: '',
-    termsAccepted: false,
+    signature: initialData?.signature || '',
+    termsAccepted: initialData?.termsAccepted || false,
 
     // OTP & Location
     otp: '',
     generatedOtp: '',
     otpVerified: false,
-    location: null,
+    location: initialData?.location || null,
     isLoadingLocation: false,
     isLoadingOtp: false,
     countdown: 0,

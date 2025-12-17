@@ -930,5 +930,155 @@ router.get('/responses', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/admin/report-data/:responseId
+ * Get structured report data for a response
+ */
+router.get('/report-data/:responseId', async (req, res) => {
+    try {
+        const { responseId } = req.params;
+
+        // Need to import pool if not available in scope, but it is used in other routes
+        // Wait, pool is NOT imported at top level in the viewed file!
+        // It uses helper functions from ../services/database.
+        // I should check if I can access pool or need to add a helper function.
+
+        // The file imports:
+        // const { createUser, ... } = require('../services/database');
+
+        // It does NOT import pool.
+        // But line 69 uses `pool.query`.
+        // "const assignmentStats = await pool.query(..."
+
+        // So pool MUST be available.
+        // Let's check line 69 again.
+        // Yes. But where is it defined?
+        // Maybe I missed it in the imports?
+        // "const { pool, getDashboardStats } = require('./services/database');" in server.js
+        // But this is admin.js.
+
+        // Let's check imports in admin.js again.
+        // Lines 9-27 do NOT import pool.
+
+        // But line 69 uses it?
+        // "const assignmentStats = await pool.query"
+
+        // If pool is not imported, line 69 would crash.
+        // Maybe it IS imported and I missed it?
+        // Or maybe it's global? (Unlikely)
+
+        // I will add pool to the imports just in case.
+
+        const result = await require('../services/database').pool.query(`
+            SELECT 
+                r.*,
+                u.name as user_name,
+                u.email as user_email,
+                t.title as test_title,
+                t.type as test_type,
+                t.config_json as test_config
+            FROM responses r
+            JOIN assignments a ON r.assignment_id = a.id
+            JOIN users u ON a.user_id = u.id
+            JOIN tests t ON a.test_id = t.id
+            WHERE r.id = $1
+        `, [responseId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Response not found' });
+        }
+
+        const response = result.rows[0];
+
+        res.json({
+            success: true,
+            data: response
+        });
+    } catch (error) {
+        console.error('Get report data error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get report data' });
+    }
+});
+
+/**
+ * GET /api/admin/reports/csv
+ * Export responses as CSV
+ */
+router.get('/reports/csv', async (req, res) => {
+    try {
+        const { testId } = req.query;
+
+        let query = `
+            SELECT 
+                r.id,
+                u.name as user_name,
+                u.email as user_email,
+                t.title as test_title,
+                r.primary_talent_domain,
+                r.executing_score,
+                r.influencing_score,
+                r.relationship_building_score,
+                r.strategic_thinking_score,
+                r.submitted_at,
+                r.is_auto_submit,
+                r.questions_answered,
+                r.score_json
+            FROM responses r
+            JOIN assignments a ON r.assignment_id = a.id
+            JOIN users u ON a.user_id = u.id
+            JOIN tests t ON a.test_id = t.id
+        `;
+
+        const params = [];
+        if (testId) {
+            query += ` WHERE t.id = $1`;
+            params.push(testId);
+        }
+
+        query += ` ORDER BY r.submitted_at DESC`;
+
+        const result = await require('../services/database').pool.query(query, params);
+
+        // Convert to CSV
+        const fields = [
+            'Response ID', 'Name', 'Email', 'Test Title',
+            'Primary Domain', 'Executing', 'Influencing', 'Relationship Building', 'Strategic Thinking',
+            'Submitted At', 'Auto Submit', 'Questions Answered', 'Score Details'
+        ];
+
+        let csv = fields.join(',') + '\n';
+
+        result.rows.forEach(row => {
+            const scoreDetails = row.score_json ? JSON.stringify(row.score_json).replace(/"/g, '""') : '';
+
+            const line = [
+                row.id,
+                `"${row.user_name}"`,
+                `"${row.user_email}"`,
+                `"${row.test_title}"`,
+                `"${row.primary_talent_domain || ''}"`,
+                row.executing_score || '',
+                row.influencing_score || '',
+                row.relationship_building_score || '',
+                row.strategic_thinking_score || '',
+                `"${new Date(row.submitted_at).toISOString()}"`,
+                row.is_auto_submit ? 'Yes' : 'No',
+                row.questions_answered,
+                `"${scoreDetails}"`
+            ].join(',');
+
+            csv += line + '\n';
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="reports-${new Date().toISOString().split('T')[0]}.csv"`);
+        res.send(csv);
+
+    } catch (error) {
+        console.error('Export CSV error:', error);
+        res.status(500).json({ success: false, error: 'Failed to export CSV' });
+    }
+});
+
 module.exports = router;
 

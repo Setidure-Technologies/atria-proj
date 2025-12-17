@@ -23,7 +23,7 @@ class ApiDatabase {
 
   constructor() {
     // Use environment variable, with fallback for development
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5100/api';
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4902/api';
   }
 
   private async fetchApi(endpoint: string, options: RequestInit = {}) {
@@ -31,12 +31,19 @@ class ApiDatabase {
       const url = `${this.baseUrl}${endpoint}`;
       console.log('🌐 Making API request to:', url);
       console.log('📋 Request options:', options);
+      if (options.body) console.log('📦 Request body:', options.body);
+
+      const token = localStorage.getItem('candidate_token');
+      const headers: any = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
       const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
+        headers,
         ...options,
       });
 
@@ -74,7 +81,10 @@ class ApiDatabase {
     try {
       const result = await this.fetchApi(`/candidate/test/${assignmentId}/submit`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ ...data, token })
       });
       return result;
@@ -356,6 +366,16 @@ class ApiDatabase {
       console.error('Failed to update profile:', error);
       return { success: false, error: 'Failed to update profile' };
     }
+  }
+  async getProfile() {
+    return this.fetchApi('/me/profile');
+  }
+
+  async saveProfile(data: any) {
+    return this.fetchApi('/me/profile', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 }
 
