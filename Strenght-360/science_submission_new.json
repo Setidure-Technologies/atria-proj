@@ -1,0 +1,18 @@
+{
+    "token": "a79f380e7336932fd48379fafb08ceb174b5a82b37abfffd5afbe895b5e09b50",
+    "responsesJson": {
+        "1": "Oxygen",
+        "2": "Pump blood",
+        "3": "Cautious but ready"
+    },
+    "scores": {
+        "totalQuestions": 3,
+        "correctAnswers": 3,
+        "score": 100,
+        "percentage": 100
+    },
+    "test_start_time": "2025-12-17T08:15:00.000Z",
+    "test_completion_time": "2025-12-17T08:25:00.000Z",
+    "questions_answered": 3,
+    "is_auto_submit": false
+}

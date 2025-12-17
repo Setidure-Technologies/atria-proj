@@ -1,0 +1,23 @@
+{
+    "token": "af6c626e83adfc9b5ea3922a27b451ce3bfcd780f3a98f68ac868fe8a08e03df",
+    "responsesJson": {
+        "1": 3,
+        "2": 4,
+        "3": 5,
+        "4": 2,
+        "5": 1
+    },
+    "executing_score": 10,
+    "influencing_score": 15,
+    "relationship_building_score": 12,
+    "strategic_thinking_score": 20,
+    "primary_talent_domain": "Strategic Thinking",
+    "detailed_scores": {
+        "Analytical": 5,
+        "Ideation": 5
+    },
+    "test_start_time": "2025-12-17T07:00:00.000Z",
+    "test_completion_time": "2025-12-17T07:10:00.000Z",
+    "questions_answered": 5,
+    "is_auto_submit": false
+}

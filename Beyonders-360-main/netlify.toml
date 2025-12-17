@@ -1,0 +1,20 @@
+# Netlify Configuration for React Router
+# This file tells Netlify to redirect all routes to index.html
+# so that React Router can handle client-side routing
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[build]
+  # Build command
+  command = "npm run build"
+  
+  # Directory with the build output
+  publish = "dist"
+
+# Optional: Set Node version
+[build.environment]
+  NODE_VERSION = "18"

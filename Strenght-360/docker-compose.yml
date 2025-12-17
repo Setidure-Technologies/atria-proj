@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  strength360:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4801:4801"
+    environment:
+      - NODE_ENV=production
+      - PORT=4801
+    volumes:
+      - ./backend/data:/app/backend/data
+      - ./backend/reports:/app/backend/reports
+    restart: unless-stopped
+    networks:
+      - strength360-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4801/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  strength360-network:
+    driver: bridge
+
+volumes:
+  strength360-data:
+    driver: local

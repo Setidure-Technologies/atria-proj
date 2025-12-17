@@ -1,0 +1,7 @@
+                                                                                                                      template_data                                                                                                                      
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"testLink": "http://localhost:4903/non-science?assignment=27b3d887-8420-4e74-bf25-19ae08e8d3ca&token=b5e136fc76d2be9039b7f18393d5056a59df7193e5df664da20b0a3083326707", "userName": "Test Candidate", "testTitle": "Beyonders Non-Science Assessment"}
+ {"testLink": "http://localhost:4903/science?assignment=4ad7eb7f-9504-49d0-973e-15b075d7f093&token=a79f380e7336932fd48379fafb08ceb174b5a82b37abfffd5afbe895b5e09b50", "userName": "Test Candidate", "testTitle": "Beyonders Science Assessment"}
+ {"testLink": "http://localhost:4903/science?assignment=f8732a2c-866f-4d01-b390-44cf47dcd9e0&token=6dbfcce111fcaaed63e82a4040b942dfbdf8b041619942672ed51575e701ed98", "userName": "Test Candidate", "testTitle": "Beyonders Science Assessment"}
+(3 rows)
+

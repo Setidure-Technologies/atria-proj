@@ -1,0 +1,214 @@
+[
+  {
+    "card_id": 1,
+    "set": "Grayscale",
+    "image_path": "public/images/1.jpeg",
+    "description": "A young person sits alone in a dim room looking down at an object in their hands.",
+    "tags": ["solitude", "uncertainty", "introspection", "decision-making"]
+  },
+  {
+    "card_id": 2,
+    "set": "Grayscale",
+    "image_path": "public/images/2.jpeg",
+    "description": "A teenage boy stands leaning against a doorway, observing something outside.",
+    "tags": ["observation", "pause", "anticipation", "transition"]
+  },
+  {
+    "card_id": 3,
+    "set": "Grayscale",
+    "image_path": "public/images/3.jpeg",
+    "description": "A student sits at a table with books scattered around, head in hands.",
+    "tags": ["stress", "academics", "pressure", "mental fatigue"]
+  },
+  {
+    "card_id": 4,
+    "set": "Grayscale",
+    "image_path": "public/images/4.jpeg",
+    "description": "Two people face each other in a quiet room; one sitting and one standing.",
+    "tags": ["relationship tension", "authority", "interaction", "communication"]
+  },
+  {
+    "card_id": 5,
+    "set": "Grayscale",
+    "image_path": "public/images/5.jpeg",
+    "description": "A person stands outdoors near a barren tree looking into the distance.",
+    "tags": ["isolation", "reflection", "nature", "future uncertainty"]
+  },
+  {
+    "card_id": 6,
+    "set": "Grayscale",
+    "image_path": "public/images/6.jpeg",
+    "description": "A teenager sits beside a bed looking at someone lying down.",
+    "tags": ["caregiving", "concern", "family", "illness"]
+  },
+  {
+    "card_id": 7,
+    "set": "Grayscale",
+    "image_path": "public/images/7.jpeg",
+    "description": "A figure walks down a long hallway towards a lighted doorway.",
+    "tags": ["transition", "journey", "uncertainty", "initiating change"]
+  },
+  {
+    "card_id": 8,
+    "set": "Grayscale",
+    "image_path": "public/images/8.jpeg",
+    "description": "A young person holds a musical instrument with a conflicted expression.",
+    "tags": ["performance pressure", "self-expression", "talent", "ambivalence"]
+  },
+  {
+    "card_id": 9,
+    "set": "Grayscale",
+    "image_path": "public/images/9.jpeg",
+    "description": "A person rests their head on a desk surrounded by papers.",
+    "tags": ["fatigue", "overwhelm", "academics", "stress"]
+  },
+  {
+    "card_id": 10,
+    "set": "Grayscale",
+    "image_path": "public/images/10.jpeg",
+    "description": "A youth stands at a window, hand on the glass, staring outside.",
+    "tags": ["longing", "reflection", "anticipation", "separation"]
+  },
+
+  {
+    "card_id": 11,
+    "set": "Set A",
+    "image_path": "public/images/11.jpeg",
+    "description": "A student presents at the front of a classroom while peers observe.",
+    "tags": ["performance", "peer evaluation", "public speaking", "achievement"]
+  },
+  {
+    "card_id": 12,
+    "set": "Set A",
+    "image_path": "public/images/12.jpeg",
+    "description": "Two teenagers sit together at a table engaged in conversation.",
+    "tags": ["friendship", "confiding", "communication", "support"]
+  },
+  {
+    "card_id": 13,
+    "set": "Set A",
+    "image_path": "public/images/13.jpeg",
+    "description": "A group of students gather around a desk looking at a book or device.",
+    "tags": ["collaboration", "group dynamics", "learning", "social interaction"]
+  },
+  {
+    "card_id": 14,
+    "set": "Set A",
+    "image_path": "public/images/14.jpeg",
+    "description": "A student sits alone in a classroom after others have left.",
+    "tags": ["isolation", "reflection", "school environment", "quiet moment"]
+  },
+  {
+    "card_id": 15,
+    "set": "Set A",
+    "image_path": "public/images/15.jpeg",
+    "description": "A teenager hands a paper or notebook to an adult, possibly a teacher.",
+    "tags": ["authority", "evaluation", "responsibility", "performance anxiety"]
+  },
+  {
+    "card_id": 16,
+    "set": "Set A",
+    "image_path": "public/images/16.jpeg",
+    "description": "Two friends walk together down a hallway in conversation.",
+    "tags": ["friendship", "support", "movement", "daily routine"]
+  },
+  {
+    "card_id": 17,
+    "set": "Set A",
+    "image_path": "public/images/17.jpeg",
+    "description": "A student studies late at night with a single desk lamp lit.",
+    "tags": ["dedication", "exhaustion", "academics", "private struggle"]
+  },
+  {
+    "card_id": 18,
+    "set": "Set A",
+    "image_path": "public/images/18.jpeg",
+    "description": "A young person reads a message on their phone with a serious expression.",
+    "tags": ["digital communication", "social tension", "news", "anticipation"]
+  },
+  {
+    "card_id": 19,
+    "set": "Set A",
+    "image_path": "public/images/19.jpeg",
+    "description": "A small group sits discussing while one person leads the conversation.",
+    "tags": ["group dynamics", "leadership", "discussion", "collaboration"]
+  },
+  {
+    "card_id": 20,
+    "set": "Set A",
+    "image_path": "public/images/20.jpeg",
+    "description": "A student appears frustrated while working on a laptop or assignment.",
+    "tags": ["frustration", "technology", "learning challenge", "problem solving"]
+  },
+
+  {
+    "card_id": 21,
+    "set": "Set B",
+    "image_path": "public/images/21.jpeg",
+    "description": "A teenager sits on a couch while adults argue in the background.",
+    "tags": ["family conflict", "stress", "helplessness", "tension"]
+  },
+  {
+    "card_id": 22,
+    "set": "Set B",
+    "image_path": "public/images/22.jpeg",
+    "description": "A young person sits alone in a park while others gather nearby.",
+    "tags": ["loneliness", "social exclusion", "introspection", "peer comparison"]
+  },
+  {
+    "card_id": 23,
+    "set": "Set B",
+    "image_path": "public/images/23.jpeg",
+    "description": "A student packs or unpacks a bag in their bedroom.",
+    "tags": ["transition", "change", "identity", "preparation"]
+  },
+  {
+    "card_id": 24,
+    "set": "Set B",
+    "image_path": "public/images/24.jpeg",
+    "description": "Two friends sit beside each other but facing away, showing tension.",
+    "tags": ["conflict", "miscommunication", "friendship strain", "emotion regulation"]
+  },
+  {
+    "card_id": 25,
+    "set": "Set B",
+    "image_path": "public/images/25.jpeg",
+    "description": "A youth looks at themselves in a mirror, touching the reflection.",
+    "tags": ["identity", "self-image", "self-reflection", "adolescence"]
+  },
+  {
+    "card_id": 26,
+    "set": "Set B",
+    "image_path": "public/images/26.jpeg",
+    "description": "A person sits on stairs holding their knees, looking distressed.",
+    "tags": ["distress", "emotion", "coping", "solitude"]
+  },
+  {
+    "card_id": 27,
+    "set": "Set B",
+    "image_path": "public/images/27.jpeg",
+    "description": "A teenager stands at a crossroads or two doorways choosing a direction.",
+    "tags": ["decision-making", "future choices", "uncertainty", "transition"]
+  },
+  {
+    "card_id": 28,
+    "set": "Set B",
+    "image_path": "public/images/28.jpeg",
+    "description": "A group laughs together while one student stands apart.",
+    "tags": ["peer exclusion", "belonging", "social comparison", "group dynamics"]
+  },
+  {
+    "card_id": 29,
+    "set": "Set B",
+    "image_path": "public/images/29.jpeg",
+    "description": "A young person sits at a dinner table with family looking thoughtful.",
+    "tags": ["family", "reflection", "communication", "silence"]
+  },
+  {
+    "card_id": 30,
+    "set": "Set B",
+    "image_path": "public/images/30.jpeg",
+    "description": "A youth stands at a bus stop holding a bag, uncertain about leaving or arriving.",
+    "tags": ["transition", "travel", "independence", "anticipation"]
+  }
+]

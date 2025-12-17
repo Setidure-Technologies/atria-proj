@@ -1,0 +1,30 @@
+{
+    "token": "test-token-placeholder",
+    "responsesJson": {
+        "1": {
+            "selectedStatement": "A"
+        },
+        "2": {
+            "selectedStatement": "B"
+        },
+        "3": {
+            "selectedStatement": "A"
+        }
+    },
+    "executing_score": 10,
+    "influencing_score": 8,
+    "relationship_building_score": 6,
+    "strategic_thinking_score": 7,
+    "primary_talent_domain": "Executing",
+    "detailed_scores": {
+        "executing": 10,
+        "influencing": 8,
+        "relationshipBuilding": 6,
+        "strategicThinking": 7
+    },
+    "test_start_time": "2025-12-16T15:00:00.000Z",
+    "test_completion_time": "2025-12-16T15:15:00.000Z",
+    "test_violations": [],
+    "is_auto_submit": false,
+    "questions_answered": 77
+}

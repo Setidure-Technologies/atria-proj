@@ -1,0 +1,18 @@
+{
+    "token": "b5e136fc76d2be9039b7f18393d5056a59df7193e5df664da20b0a3083326707",
+    "responsesJson": {
+        "31": "William Shakespeare",
+        "32": "Canberra",
+        "33": "Plan and define roles"
+    },
+    "scores": {
+        "totalQuestions": 3,
+        "correctAnswers": 3,
+        "score": 100,
+        "percentage": 100
+    },
+    "test_start_time": "2025-12-17T08:15:00.000Z",
+    "test_completion_time": "2025-12-17T08:25:00.000Z",
+    "questions_answered": 3,
+    "is_auto_submit": false
+}
