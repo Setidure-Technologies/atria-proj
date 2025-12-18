@@ -33,6 +33,9 @@ app.use(
             'http://localhost:5175',
             'http://localhost:4901', // Candidate app
             'http://localhost:4903', // Admin portal
+            'https://atria.peop360.com', // Production domain
+            'https://candidate.atria.peop360.com',
+            'https://admin.atria.peop360.com',
             process.env.CORS_ORIGINS,
         ].filter(Boolean),
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

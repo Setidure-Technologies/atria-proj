@@ -148,6 +148,7 @@ router.post('/users', async (req, res) => {
             // Queue invitation email
             await queueEmail({
                 toEmail: email,
+                subject: 'Invitation to Atria 360',
                 templateName: 'invitation',
                 templateData: {
                     email,

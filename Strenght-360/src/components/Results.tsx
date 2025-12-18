@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TalentScores, DetailedTalentScores, getTopSubdomainsForDomain, CoreDomain } from '../utils/scoring';
 import { TestSummary } from './TestSummary';
-import { Award, TrendingUp, Users, Lightbulb, Target, ArrowLeft, BarChart3, Download } from 'lucide-react';
+import { Award, TrendingUp, Users, Lightbulb, Target, ArrowLeft, BarChart3 } from 'lucide-react';
 import { apiDB } from '../lib/apiDatabase';
 
 interface ResultsProps {
@@ -96,25 +96,7 @@ export function Results({
     return null;
   };
 
-  const handleDownloadPDF = async () => {
-    if (!testResponseId) {
-      setPdfDownloadError('Test response ID not available');
-      return;
-    }
 
-    setPdfDownloadStatus('downloading');
-    setPdfDownloadError(null);
-
-    try {
-      await apiDB.generatePDFReport(testResponseId);
-      setPdfDownloadStatus('success');
-      setTimeout(() => setPdfDownloadStatus('idle'), 3000); // Reset status after 3 seconds
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      setPdfDownloadStatus('error');
-      setPdfDownloadError(error instanceof Error ? error.message : 'Failed to download PDF');
-    }
-  };
 
   // Helper function to map display names to CoreDomain enum values
   const mapDisplayNameToCoreDomain = (displayName: string): CoreDomain => {
@@ -186,31 +168,41 @@ export function Results({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4 py-12">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-600 p-3 rounded-xl shadow-lg">
+              <Award className="text-white w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Your Talent Profile</h1>
+              <p className="text-gray-600">Analysis complete for {studentName}</p>
+            </div>
+          </div>
+          {onBackToStart && (
+            <button
+              onClick={onBackToStart}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition shadow-sm"
+            >
+              <ArrowLeft size={20} />
+              Return to Dashboard
+            </button>
+          )}
+        </div>
+
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="text-center mb-8">
-            <Award className="mx-auto mb-4 text-orange-600" size={64} />
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Strength 360 Complete!</h1>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Strength 360 Complete!</h2>
             <p className="text-gray-600">Thank you, {studentName}</p>
             <div className="mt-3 flex justify-center">{renderSendStatus()}</div>
             <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {testResponseId && (
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={pdfDownloadStatus === 'downloading'}
-                  className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-lg transition duration-200"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  {pdfDownloadStatus === 'downloading' ? 'Generating PDF...' : 'Download PDF Report'}
-                </button>
-              )}
               {onBackToStart && (
                 <button
                   onClick={onBackToStart}
                   className="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition duration-200"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Take Another Strength 360
+                  Return to Dashboard
                 </button>
               )}
             </div>
@@ -383,7 +375,7 @@ export function Results({
             })}
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

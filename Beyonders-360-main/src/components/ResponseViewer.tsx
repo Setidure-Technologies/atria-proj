@@ -16,6 +16,7 @@ interface Response {
     submitted_at: string;
     is_auto_submit: boolean;
     questions_answered: number;
+    score_json?: any;
 }
 
 interface ResponseViewerProps {
@@ -216,6 +217,28 @@ function StatCard({ title, value }: { title: string; value: string | number }) {
 }
 
 function ScoreDisplay({ response }: { response: Response }) {
+    // Check for Beyonders scores first (stored in score_json)
+    if (response.score_json && (response.score_json.creativity !== undefined || response.score_json.overall)) {
+        const scores = response.score_json;
+        return (
+            <div className="text-xs space-y-1">
+                <div className="flex justify-between gap-2">
+                    <span className="text-gray-600">Creativity:</span>
+                    <span className="font-medium">{scores.creativity || 0}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                    <span className="text-gray-600">Prob Solv:</span>
+                    <span className="font-medium">{scores.problemSolving || 0}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                    <span className="text-gray-600">Emotional:</span>
+                    <span className="font-medium">{scores.emotionalIntelligence || 0}</span>
+                </div>
+            </div>
+        );
+    }
+
+    // Fallback to Strength 360 scores
     if (response.executing_score === undefined || response.executing_score === null) {
         return <span className="text-sm text-gray-400">No scores</span>;
     }

@@ -7,6 +7,9 @@ interface Assignment {
     title: string;
     description: string;
     type: string;
+    engineType?: string;
+    testSlug?: string;
+    runner?: string;
     status: string;
     due_at: string | null;
     duration_minutes: number;
@@ -32,6 +35,7 @@ export default function Dashboard() {
         try {
             const result = await apiDB.getAssignments(token);
             if (result.success) {
+                console.log('📋 Dashboard - Assignments loaded:', result.assignments);
                 setAssignments(result.assignments);
             } else {
                 setError(result.error || 'Failed to load assignments');
@@ -48,13 +52,33 @@ export default function Dashboard() {
     };
 
     const startTest = (assignmentId: string) => {
+        // Clear any stale localStorage state before starting
+        localStorage.removeItem(`test_progress_${assignmentId}`);
         navigate(`/test/${assignmentId}`);
+    };
+
+    const viewReport = (assignmentId: string) => {
+        // Navigate to results page (to be implemented)
+        navigate(`/results/${assignmentId}`);
     };
 
     const handleLogout = () => {
         localStorage.removeItem('candidate_token');
         localStorage.removeItem('candidate_user');
         navigate('/login');
+    };
+
+    const getTestTypeDisplay = (assignment: Assignment) => {
+        const slug = assignment.testSlug || assignment.type;
+
+        if (slug === 'beyonders_science') return 'Beyonders Science Assessment';
+        if (slug === 'beyonders_non_science') return 'Beyonders Non-Science Assessment';
+        if (slug === 'strength360') return 'Psychometric Assessment';
+        if (slug === 'adaptive') return 'Adaptive Assessment';
+        if (slug === 'psychometric') return 'Psychometric Assessment';
+        if (slug === 'custom') return 'Custom Assessment';
+
+        return assignment.type.charAt(0).toUpperCase() + assignment.type.slice(1) + ' Assessment';
     };
 
     if (loading) {
@@ -73,12 +97,18 @@ export default function Dashboard() {
                         <div className="flex items-center">
                             <h1 className="text-xl font-bold text-gray-900">Candidate Portal</h1>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => navigate('/profile')}
+                                className="text-gray-600 hover:text-gray-900 font-medium"
+                            >
+                                Profile
+                            </button>
                             <button
                                 onClick={handleLogout}
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                                className="text-gray-600 hover:text-gray-900 font-medium"
                             >
-                                Sign Out
+                                Logout
                             </button>
                         </div>
                     </div>
@@ -115,7 +145,7 @@ export default function Dashboard() {
                                             {assignment.title}
                                         </h3>
                                         <p className="mt-1 text-sm text-gray-500">
-                                            {assignment.type === 'adaptive' ? 'Adaptive Assessment' : 'Psychometric Assessment'}
+                                            {getTestTypeDisplay(assignment)}
                                         </p>
                                     </div>
                                     <div className="px-4 py-5 sm:p-6">
@@ -125,24 +155,32 @@ export default function Dashboard() {
                                         <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                                             <span>Duration: {assignment.duration_minutes} mins</span>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${assignment.status === 'completed' || assignment.status === 'submitted'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : assignment.status === 'started'
-                                                        ? 'bg-yellow-100 text-yellow-800'
-                                                        : 'bg-blue-100 text-blue-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : assignment.status === 'started'
+                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                    : 'bg-blue-100 text-blue-800'
                                                 }`}>
                                                 {assignment.status.toUpperCase()}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="px-4 py-4 sm:px-6">
-                                        <button
-                                            onClick={() => startTest(assignment.id)}
-                                            disabled={assignment.status === 'submitted' || assignment.status === 'expired'}
-                                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                                        >
-                                            {assignment.status === 'submitted' ? 'Completed' :
-                                                assignment.status === 'started' ? 'Resume Test' : 'Start Test'}
-                                        </button>
+                                        {assignment.status === 'submitted' ? (
+                                            <button
+                                                onClick={() => viewReport(assignment.id)}
+                                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                            >
+                                                View Report
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => startTest(assignment.id)}
+                                                disabled={assignment.status === 'expired'}
+                                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                            >
+                                                {assignment.status === 'started' ? 'Resume Test' : 'Start Test'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}

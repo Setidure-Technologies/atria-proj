@@ -6,10 +6,8 @@ import Login from './Login';
 import Dashboard from './Dashboard';
 import CandidateGate from './components/CandidateGate';
 import { apiDB } from './lib/apiDatabase';
-
 import BeyondersTestRunner from './BeyondersTestRunner';
-
-// ... existing imports
+import Profile from './Profile';
 
 function TestDispatcher() {
   const { assignmentId } = useParams();
@@ -48,19 +46,13 @@ function TestDispatcher() {
           if (result.success && result.assignment) {
             // Store the full assignment data including testSlug and runner
             setTestType(result.assignment.testSlug || result.assignment.engineType || result.assignment.testType);
-            setTestConfig(result.assignment.config || {});
-
-            if (result.user) {
-              setStudentInfo({
-                name: result.user.name,
-                email: result.user.email
-              });
-            }
+            setTestConfig(result.assignment.config);
+            setStudentInfo(result.user);
           } else {
             setError(result.error || 'Invalid test link');
           }
         } catch (err) {
-          setError('Failed to verify test link');
+          setError('Failed to validate test access');
         } finally {
           setLoading(false);
         }
@@ -86,64 +78,47 @@ function TestDispatcher() {
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <div className="text-red-500 text-5xl mb-4">⚠️</div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">Access Error</h2>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => navigate('/dashboard')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() => navigate('/login')}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            Go to Dashboard
+            Go to Login
           </button>
         </div>
       </div>
     );
   }
 
-  if (!assignmentId || !activeToken) {
-    return <Navigate to="/dashboard" />;
-  }
+  // Determine which runner to use based on test type/slug
+  const slug = testType?.toLowerCase();
 
-  // Don't render test components until we have the test type
-  if (!testType && loading === false) {
+  if (slug === 'strength-360' || slug === 'psychometric') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md text-center">
-          <div className="text-yellow-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Unable to Load Test</h2>
-          <p className="text-gray-600">Test type information is missing.</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const slug = String(testType || '').trim();
-
-  console.log('🔍 Test Dispatcher - Routing Decision:', { slug, testConfig });
-
-  // Explicit slug-based routing (no silent fallbacks)
-  if (slug === 'beyonders_science' || slug === 'beyonders_non_science') {
-    console.log('✅ Routing to BeyondersTestRunner:', slug);
-    return (
-      <BeyondersTestRunner
+      <TestRunner
         assignmentId={assignmentId}
         token={activeToken}
-        testType={slug as any}
+        testConfig={testConfig}
+        studentName={studentInfo?.name}
+        studentEmail={studentInfo?.email}
       />
     );
   }
 
-  if (slug === 'strength360' || slug === 'psychometric') {
-    console.log('✅ Routing to Strength TestRunner');
-    return <TestRunner assignmentId={assignmentId} token={activeToken} />;
+  if (slug === 'beyonders' || slug === 'adaptive') {
+    return (
+      <BeyondersTestRunner
+        assignmentId={assignmentId}
+        token={activeToken}
+        testConfig={testConfig}
+        studentName={studentInfo?.name}
+        studentEmail={studentInfo?.email}
+      />
+    );
   }
 
+  // Fallback for legacy 'adaptive' type if not caught above
   if (slug === 'adaptive') {
-    console.log('✅ Routing to AdaptiveTestRunner');
     return (
       <AdaptiveTestRunner
         assignmentId={assignmentId}
@@ -193,6 +168,14 @@ function App() {
         element={
           <PrivateRoute>
             <CandidateGate />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Profile />
           </PrivateRoute>
         }
       />

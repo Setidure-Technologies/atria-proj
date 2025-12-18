@@ -1,209 +1,222 @@
 import React, { useState, useEffect } from 'react';
+import { User, Mail, Phone, Calendar, Download, ArrowLeft, Award, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { apiDB } from './lib/apiDatabase';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4902';
+
+interface Assignment {
+    id: string;
+    test_id: string;
+    title: string;
+    description: string;
+    type: string;
+    status: string;
+    assigned_at: string;
+    submitted_at?: string;
+    response_id?: string;
+}
+
+interface UserProfile {
+    name: string;
+    email: string;
+    phone: string;
+    created_at: string;
+}
 
 export default function Profile() {
-    const [formData, setFormData] = useState({
-        name: '',
-        phone: '',
-        dateOfBirth: '',
-        institution: '',
-        boardOfStudy: '',
-        parentName: '',
-        parentOccupation: '',
-        annualIncome: '',
-        fullAddress: '',
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
     const navigate = useNavigate();
+    const [user, setUser] = useState<UserProfile | null>(null);
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const userStr = localStorage.getItem('candidate_user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            setFormData(prev => ({
-                ...prev,
-                name: user.name || '',
-                phone: user.phone || '',
-                // Other fields might not be in the initial user object, 
-                // we might need to fetch full profile if we want to pre-fill
-            }));
-        }
+        fetchProfileData();
     }, []);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-
-        const token = localStorage.getItem('candidate_token');
-        if (!token) {
-            navigate('/login');
-            return;
-        }
-
+    const fetchProfileData = async () => {
         try {
-            const result = await apiDB.updateProfile(token, formData);
-            if (result.success) {
-                // Update local user data if needed
-                const userStr = localStorage.getItem('candidate_user');
-                if (userStr) {
-                    const user = JSON.parse(userStr);
-                    localStorage.setItem('candidate_user', JSON.stringify({ ...user, ...result.user }));
-                }
-                navigate('/dashboard');
-            } else {
-                setError(result.error || 'Failed to update profile');
+            const token = localStorage.getItem('candidate_token');
+            if (!token) {
+                navigate('/login');
+                return;
             }
-        } catch (err) {
-            setError('An error occurred');
+
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            // Fetch user info
+            const userRes = await fetch(`${API_URL}/api/auth/me`, { headers });
+            const userData = await userRes.json();
+
+            // Fetch assignments
+            const assignRes = await fetch(`${API_URL}/api/candidate/assignments`, { headers });
+            const assignData = await assignRes.json();
+
+            if (userData.success) {
+                setUser(userData.user);
+            }
+            if (assignData.success) {
+                setAssignments(assignData.assignments);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
         } finally {
             setLoading(false);
         }
     };
 
+    const handleDownloadReport = async (responseId: string, testTitle: string) => {
+        try {
+            const response = await fetch(`${API_URL}/api/generate-pdf`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ testResponseId: responseId }),
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${testTitle.replace(/\s+/g, '_')}_Report.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } else {
+                alert('Report generation failed. Please contact support.');
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            alert('Failed to download report');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto bg-white rounded-lg shadow px-8 py-10">
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900">Complete Your Profile</h2>
-                    <p className="mt-2 text-gray-600">Please provide the following details before proceeding.</p>
+        <div className="min-h-screen bg-gray-50 p-6">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="mb-8 flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="p-2 hover:bg-gray-200 rounded-full transition"
+                    >
+                        <ArrowLeft size={24} className="text-gray-600" />
+                    </button>
+                    <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                id="name"
-                                required
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
+                {/* User Info Card */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User size={32} className="text-blue-600" />
                         </div>
-
                         <div>
-                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                id="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">Date of Birth</label>
-                            <input
-                                type="date"
-                                name="dateOfBirth"
-                                id="dateOfBirth"
-                                required
-                                value={formData.dateOfBirth}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="institution" className="block text-sm font-medium text-gray-700">Institution / School</label>
-                            <input
-                                type="text"
-                                name="institution"
-                                id="institution"
-                                required
-                                value={formData.institution}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="boardOfStudy" className="block text-sm font-medium text-gray-700">Board of Study</label>
-                            <input
-                                type="text"
-                                name="boardOfStudy"
-                                id="boardOfStudy"
-                                value={formData.boardOfStudy}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="parentName" className="block text-sm font-medium text-gray-700">Parent/Guardian Name</label>
-                            <input
-                                type="text"
-                                name="parentName"
-                                id="parentName"
-                                value={formData.parentName}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="parentOccupation" className="block text-sm font-medium text-gray-700">Parent Occupation</label>
-                            <input
-                                type="text"
-                                name="parentOccupation"
-                                id="parentOccupation"
-                                value={formData.parentOccupation}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="annualIncome" className="block text-sm font-medium text-gray-700">Annual Income</label>
-                            <input
-                                type="text"
-                                name="annualIncome"
-                                id="annualIncome"
-                                value={formData.annualIncome}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
+                            <h2 className="text-xl font-bold text-gray-900">{user?.name}</h2>
+                            <p className="text-gray-500">Candidate</p>
                         </div>
                     </div>
 
-                    <div>
-                        <label htmlFor="fullAddress" className="block text-sm font-medium text-gray-700">Full Address</label>
-                        <textarea
-                            name="fullAddress"
-                            id="fullAddress"
-                            rows={3}
-                            value={formData.fullAddress}
-                            onChange={handleChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="flex items-center gap-3 text-gray-600">
+                            <Mail size={20} />
+                            <span>{user?.email}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-600">
+                            <Phone size={20} />
+                            <span>{user?.phone || 'No phone added'}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-600">
+                            <Calendar size={20} />
+                            <span>Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</span>
+                        </div>
                     </div>
+                </div>
 
-                    {error && (
-                        <div className="text-red-500 text-sm">{error}</div>
+                {/* Test History */}
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Test History</h3>
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                    {assignments.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">
+                            No tests assigned yet.
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Test Name</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Type</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Status</th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Date</th>
+                                        <th className="px-6 py-4 text-right text-sm font-semibold text-gray-600">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {assignments.map((assignment) => (
+                                        <tr key={assignment.id} className="hover:bg-gray-50 transition">
+                                            <td className="px-6 py-4">
+                                                <div className="font-medium text-gray-900">{assignment.title}</div>
+                                                <div className="text-xs text-gray-500">{assignment.description}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                                                    {assignment.type}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.status === 'submitted'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : assignment.status === 'started'
+                                                            ? 'bg-yellow-100 text-yellow-800'
+                                                            : 'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                    {assignment.status === 'submitted' ? <Award size={12} /> : <Clock size={12} />}
+                                                    <span className="capitalize">{assignment.status}</span>
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {assignment.submitted_at
+                                                    ? new Date(assignment.submitted_at).toLocaleDateString()
+                                                    : new Date(assignment.assigned_at).toLocaleDateString()
+                                                }
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {assignment.status === 'submitted' && assignment.response_id && (
+                                                    <button
+                                                        onClick={() => handleDownloadReport(assignment.response_id!, assignment.title)}
+                                                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+                                                    >
+                                                        <Download size={16} />
+                                                        Report
+                                                    </button>
+                                                )}
+                                                {assignment.status !== 'submitted' && (
+                                                    <button
+                                                        onClick={() => navigate(`/test/${assignment.id}`)}
+                                                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+                                                    >
+                                                        Start
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
-
-                    <div className="flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                        >
-                            {loading ? 'Saving...' : 'Save & Continue'}
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     );

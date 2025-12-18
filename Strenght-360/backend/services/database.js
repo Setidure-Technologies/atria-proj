@@ -430,9 +430,10 @@ async function getAssignmentByToken(token) {
  */
 async function getUserAssignments(userId) {
     const result = await pool.query(
-        `SELECT a.*, t.title, t.description, t.type, t.duration_minutes
+        `SELECT a.*, t.title, t.description, t.type, t.duration_minutes, t.config_json, r.id as response_id
      FROM assignments a
      JOIN tests t ON a.test_id = t.id
+     LEFT JOIN responses r ON r.assignment_id = a.id
      WHERE a.user_id = $1
      ORDER BY a.assigned_at DESC`,
         [userId]

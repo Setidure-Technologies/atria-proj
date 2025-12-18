@@ -380,4 +380,46 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
+const { generateOTP, verifyOTP } = require('../services/otpService');
+
+/**
+ * POST /api/auth/send-otp
+ * Send OTP to phone number
+ */
+router.post('/send-otp', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        if (!phone) {
+            return res.status(400).json({ success: false, error: 'Phone number is required' });
+        }
+        await generateOTP(phone);
+        res.json({ success: true, message: 'OTP sent successfully' });
+    } catch (error) {
+        console.error('Send OTP error:', error);
+        res.status(500).json({ success: false, error: 'Failed to send OTP' });
+    }
+});
+
+/**
+ * POST /api/auth/verify-otp
+ * Verify OTP
+ */
+router.post('/verify-otp', async (req, res) => {
+    try {
+        const { phone, code } = req.body;
+        if (!phone || !code) {
+            return res.status(400).json({ success: false, error: 'Phone and code are required' });
+        }
+        const result = await verifyOTP(phone, code);
+        if (result.success) {
+            res.json({ success: true, message: 'Phone verified successfully' });
+        } else {
+            res.status(400).json({ success: false, error: result.error });
+        }
+    } catch (error) {
+        console.error('Verify OTP error:', error);
+        res.status(500).json({ success: false, error: 'Failed to verify OTP' });
+    }
+});
+
 module.exports = router;

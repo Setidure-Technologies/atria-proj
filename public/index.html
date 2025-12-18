@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATRIA 360 - Student Assessment Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            max-width: 300px;
+            height: auto;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #4a5568;
+            font-size: 1.3rem;
+            margin-bottom: 50px;
+            font-weight: 300;
+        }
+
+        .portal-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .portal-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            border: 2px solid transparent;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+        }
+
+        .portal-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+
+        .candidate-card .portal-icon {
+            color: #48bb78;
+        }
+
+        .admin-card .portal-icon {
+            color: #ed8936;
+        }
+
+        .portal-title {
+            color: #2d3748;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .portal-description {
+            color: #718096;
+            font-size: 1rem;
+            margin-bottom: 25px;
+        }
+
+        .portal-button {
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .candidate-card .portal-button {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .candidate-card .portal-button:hover {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            transform: scale(1.05);
+        }
+
+        .admin-card .portal-button {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .admin-card .portal-button:hover {
+            background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+            transform: scale(1.05);
+        }
+
+        .footer {
+            margin-top: 50px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .portal-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 40px 20px;
+            }
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+            padding: 30px 0;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-text {
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo-container">
+                <img src="peop360_logo_powered.jpeg" alt="PEOP360 Logo" class="logo">
+                <h1>Atria</h1>
+                <p style="color: #718096; font-size: 1rem; margin-top: -10px; margin-bottom: 20px;">Powered by Peop360
+                </p>
+            </div>
+
+            <p class="subtitle">Comprehensive Student Assessment & Evaluation Platform</p>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">Psychometric Testing</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-text">Skill Assessment</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-text">Detailed Analytics</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-text">Secure & Reliable</div>
+                </div>
+            </div>
+
+            <div class="portal-buttons">
+                <div class="portal-card candidate-card" onclick="window.location.href='/candidate/'">
+                    <div class="portal-icon">👨‍🎓</div>
+                    <div class="portal-title">Candidate Portal</div>
+                    <div class="portal-description">
+                        Access your assessments, view results, and track your progress
+                    </div>
+                    <a href="/candidate/" class="portal-button">Enter Portal</a>
+                </div>
+
+                <div class="portal-card admin-card" onclick="window.location.href='/admin/'">
+                    <div class="portal-icon">👨‍💼</div>
+                    <div class="portal-title">Admin Portal</div>
+                    <div class="portal-description">
+                        Manage assessments, review results, and generate reports
+                    </div>
+                    <a href="/admin/" class="portal-button">Enter Portal</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 ATRIA 360 - Powered by Setidure Technologies</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -140,9 +140,7 @@ const formatCountdown = (countdown: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-const generateOTP = (): string => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
+
 
 const validatePhone = (phone: string): boolean => {
   const phoneRegex = /^[0-9]{10}$/;
@@ -267,20 +265,7 @@ export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
     };
   }, [state.countdown]);
 
-  // OTP Generation
-  const handleGenerateOtp = () => {
-    const newOtp = generateOTP();
-    console.log(`Generated OTP for ${state.phone}: ${newOtp}`);
 
-    setState((prev) => ({
-      ...prev,
-      generatedOtp: newOtp,
-      countdown: 120,
-      isLoadingOtp: false,
-    }));
-
-    alert(`OTP sent to ${state.phone}: ${newOtp} (This is for demo. In production, OTP would be sent via SMS)`);
-  };
 
   // Location handling
   const handleGetLocation = async () => {
@@ -318,7 +303,7 @@ export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
 
   // Navigation handlers
   const nextStep = () => {
-    const steps: AppState['step'][] = ['info', 'academic', 'extracurricular', 'interests', 'review', 'otp', 'location'];
+    const steps: AppState['step'][] = ['info', 'academic', 'extracurricular', 'interests', 'review', 'location'];
     const currentIndex = steps.indexOf(state.step);
     if (currentIndex < steps.length - 1) {
       setState(prev => ({ ...prev, step: steps[currentIndex + 1] }));
@@ -326,7 +311,7 @@ export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
   };
 
   const prevStep = () => {
-    const steps: AppState['step'][] = ['info', 'academic', 'extracurricular', 'interests', 'review', 'otp', 'location'];
+    const steps: AppState['step'][] = ['info', 'academic', 'extracurricular', 'interests', 'review', 'location'];
     const currentIndex = steps.indexOf(state.step);
     if (currentIndex > 0) {
       setState(prev => ({ ...prev, step: steps[currentIndex - 1] }));
@@ -389,41 +374,16 @@ export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
       return;
     }
 
-    setState((prev) => ({ ...prev, isLoadingOtp: true }));
-
-    setTimeout(() => {
-      handleGenerateOtp();
-      nextStep();
-    }, 500);
+    // Skip OTP and go directly to location
+    setState(prev => ({
+      ...prev,
+      otpVerified: true, // Auto-verify since we are skipping
+      step: 'location'
+    }));
+    handleGetLocation();
   };
 
-  const handleOtpSubmit = (e: FormEvent) => {
-    e.preventDefault();
 
-    if (state.otp === state.generatedOtp) {
-      setState((prev) => ({
-        ...prev,
-        otpVerified: true
-      }));
-      nextStep();
-      handleGetLocation();
-    } else {
-      alert('Invalid OTP. Please try again.');
-    }
-  };
-
-  const handleResendOtp = () => {
-    if (state.countdown > 0) {
-      alert(`Please wait ${state.countdown} seconds before requesting new OTP`);
-      return;
-    }
-
-    setState((prev) => ({ ...prev, isLoadingOtp: true }));
-
-    setTimeout(() => {
-      handleGenerateOtp();
-    }, 500);
-  };
 
   const handleLocationSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -1078,7 +1038,7 @@ export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
                 disabled={!state.termsAccepted || !state.signature}
                 className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Proceed to Verification
+                Proceed to Location
               </button>
             </div>
           </form>
@@ -1087,59 +1047,7 @@ export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
     );
   }
 
-  // Step 6: OTP Verification
-  if (state.step === 'otp') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-md w-full">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Verify Mobile</h1>
-            <p className="text-gray-600">Enter the OTP sent to {state.phone}</p>
-            <div className="mt-2 text-sm text-orange-600 font-medium">
-              Step 6 of 7: Verification
-            </div>
-          </div>
 
-          <form onSubmit={handleOtpSubmit} className="space-y-6">
-            <div>
-              <input
-                type="text"
-                value={state.otp}
-                onChange={(e) => setState(prev => ({ ...prev, otp: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-                className="w-full text-center text-2xl tracking-widest px-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
-                placeholder="000000"
-                maxLength={6}
-                required
-              />
-            </div>
-
-            <div className="text-center">
-              {state.countdown > 0 ? (
-                <p className="text-sm text-gray-600">
-                  Resend OTP in <span className="font-semibold text-orange-600">{formatCountdown(state.countdown)}</span>
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  className="text-sm text-orange-600 font-medium hover:text-orange-700"
-                >
-                  Resend OTP
-                </button>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              Verify & Continue
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   // Step 7: Location Permission
   if (state.step === 'location') {

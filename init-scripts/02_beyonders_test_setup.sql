@@ -1,7 +1,7 @@
 -- Simple fix: Ensure we have the Beyonders tests that match the existing App.jsx routes
 
 -- Keep the existing tests but make sure they're properly configured
-UPDATE tests SET is_active = TRUE WHERE id IN ('beyonders_science', 'beyonders_non_science');
+-- UPDATE tests SET is_active = TRUE WHERE id IN ('beyonders_science', 'beyonders_non_science');
 
 -- Add a simple CSV bulk import table - just what we need
 CREATE TABLE IF NOT EXISTS bulk_imports (

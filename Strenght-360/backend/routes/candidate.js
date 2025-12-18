@@ -29,9 +29,19 @@ const { requireAuth, requireCandidate, optionalAuth } = require('../middleware/a
 router.get('/assignments', requireAuth, requireCandidate, async (req, res) => {
     try {
         const assignments = await getUserAssignments(req.user.id);
+
+        // Transform assignments to include testSlug and runner from config_json
+        const transformedAssignments = assignments.map(assignment => ({
+            ...assignment,
+            engineType: assignment.type, // Engine type (psychometric/adaptive/custom)
+            testSlug: assignment.config_json?.slug || null, // Product identity
+            runner: assignment.config_json?.runner || null, // Runner component name
+            config: assignment.config_json || {}, // Full config for reference
+        }));
+
         res.json({
             success: true,
-            assignments,
+            assignments: transformedAssignments,
         });
     } catch (error) {
         console.error('Get assignments error:', error);
@@ -114,8 +124,11 @@ router.get('/test/:assignmentId', optionalAuth, async (req, res) => {
                 testId: assignment.test_id,
                 testTitle: assignment.test_title,
                 testDescription: assignment.description,
-                testType: assignment.type,
-                config: assignment.config_json,
+                testType: assignment.type, // Keep for backward compatibility
+                engineType: assignment.type, // Engine type (psychometric/adaptive/custom)
+                testSlug: assignment.config_json?.slug || null, // Product identity
+                runner: assignment.config_json?.runner || null, // Runner component name
+                config: assignment.config_json || {},
                 durationMinutes: assignment.duration_minutes,
                 status: assignment.status === 'assigned' ? 'started' : assignment.status,
                 dueAt: assignment.due_at,
@@ -242,7 +255,7 @@ router.post('/test/:assignmentId/submit', optionalAuth, async (req, res) => {
                 [
                     assignment.id,
                     JSON.stringify(responsesJson),
-                    JSON.stringify(scores || {
+                    JSON.stringify(scores || req.body.scoreJson || {
                         executing: executingScore,
                         influencing: influencingScore,
                         relationshipBuilding: relationshipBuildingScore,
@@ -296,6 +309,100 @@ router.post('/test/:assignmentId/submit', optionalAuth, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to submit test',
+        });
+    }
+});
+
+/**
+ * POST /api/candidate/test/:assignmentId/submit-adaptive
+ * Submit adaptive test (Beyonders)
+ */
+router.post('/test/:assignmentId/submit-adaptive', requireCandidate, async (req, res) => {
+    try {
+        const { assignmentId } = req.params;
+        const { responses, scores, testMetrics } = req.body;
+        const { narrativeResponses, cardSelections } = req.body; // Extract Beyonders specific data
+
+        // Verify assignment belongs to candidate
+        const assignmentResult = await pool.query(
+            `SELECT * FROM assignments 
+             WHERE id = $1 AND (user_id = $2 OR email = $3)`,
+            [assignmentId, req.user.id, req.user.email]
+        );
+
+        const assignment = assignmentResult.rows[0];
+
+        if (!assignment) {
+            return res.status(404).json({
+                success: false,
+                error: 'Assignment not found',
+            });
+        }
+
+        if (assignment.status === 'submitted') {
+            return res.status(400).json({
+                success: false,
+                error: 'Test already submitted',
+            });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Save response
+            const responseResult = await client.query(
+                `INSERT INTO responses (
+                    assignment_id, 
+                    responses_json, 
+                    score_json,
+                    detailed_scores,
+                    test_start_time,
+                    test_completion_time,
+                    is_auto_submit,
+                    questions_answered
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING id`,
+                [
+                    assignmentId,
+                    JSON.stringify({ narrativeResponses, cardSelections }), // Store raw responses
+                    JSON.stringify(scores), // Store calculated scores
+                    JSON.stringify(testMetrics), // Store metrics
+                    testMetrics?.startTime || new Date(),
+                    testMetrics?.completionTime || new Date(),
+                    testMetrics?.isAutoSubmit || false,
+                    cardSelections?.length || 0
+                ]
+            );
+
+            // Update assignment status
+            await client.query(
+                `UPDATE assignments 
+                 SET status = 'submitted', submitted_at = CURRENT_TIMESTAMP 
+                 WHERE id = $1`,
+                [assignmentId]
+            );
+
+            await client.query('COMMIT');
+
+            res.json({
+                success: true,
+                responseId: responseResult.rows[0].id,
+                message: 'Test submitted successfully'
+            });
+
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+
+    } catch (error) {
+        console.error('Submit adaptive test error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to submit test'
         });
     }
 });

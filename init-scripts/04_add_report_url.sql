@@ -1,0 +1,1 @@
+ALTER TABLE responses ADD COLUMN IF NOT EXISTS report_url VARCHAR(512);

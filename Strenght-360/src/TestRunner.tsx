@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StudentInfo } from './components/StudentInfo';
 import { TestInstructions } from './components/TestInstructions';
 import { Header } from './components/Header';
@@ -20,6 +21,7 @@ interface TestRunnerProps {
 }
 
 function TestRunner({ assignmentId, token }: TestRunnerProps) {
+  const navigate = useNavigate();
   const [state, setState] = useState<AppState>('info');
   const [studentName, setStudentName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
@@ -77,9 +79,7 @@ function TestRunner({ assignmentId, token }: TestRunnerProps) {
 
   const handleBackToStart = () => {
     if (assignmentId && token) {
-      // If token based, we can't go back to info, just reset to instructions or show completion
-      // For now, let's just reload or show a message
-      window.location.reload();
+      navigate('/dashboard');
     } else {
       setState('info');
       setCurrentQuestionIndex(0);
@@ -126,7 +126,8 @@ function TestRunner({ assignmentId, token }: TestRunnerProps) {
     const submissionData = {
       student_name: studentName,
       student_email: studentEmail,
-      responsesJson: responses, // Changed from responses to responsesJson
+      responses: responses, // Include both for compatibility
+      responsesJson: responses,
       executing_score: calculatedScores.executing,
       influencing_score: calculatedScores.influencing,
       relationship_building_score: calculatedScores.relationshipBuilding,

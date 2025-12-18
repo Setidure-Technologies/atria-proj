@@ -7,12 +7,13 @@ import { TestCompletion } from './components/TestCompletion.tsx'
 import './index.css'
 
 function App() {
-  const isTestRoute = window.location.pathname.startsWith('/test/');
-  const isCompletionRoute = window.location.pathname === '/test-completed';
+  const pathname = window.location.pathname;
+  const isTestRoute = pathname.startsWith('/admin/test/') || pathname.startsWith('/test/');
+  const isCompletionRoute = pathname === '/admin/test-completed' || pathname === '/test-completed';
 
   if (isTestRoute || isCompletionRoute) {
     return (
-      <Router>
+      <Router basename="/admin">
         <Routes>
           <Route path="/test/:assignmentId" element={<BeyondersTestComponent />} />
           <Route path="/test-completed" element={<TestCompletion />} />
