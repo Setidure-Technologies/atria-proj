@@ -118,14 +118,14 @@ function AdminApp() {
                         <div className="flex items-center space-x-3">
                             <img
                                 src="/peop360_logo_powered.jpeg"
-                                alt="ATRIA 360"
+                                alt="ATRIA"
                                 className="h-10 w-auto bg-white rounded px-2 py-1"
                                 onError={(e) => {
                                     e.currentTarget.style.display = 'none';
                                 }}
                             />
                             <div>
-                                <h1 className="text-2xl font-bold">ATRIA 360</h1>
+                                <h1 className="text-2xl font-bold">ATRIA</h1>
                                 <p className="text-sm text-orange-100">Admin Portal</p>
                             </div>
                         </div>
@@ -264,14 +264,14 @@ function LoginPage({ onLogin }: { onLogin: (email: string, password: string) => 
                     <div className="flex justify-center mb-4">
                         <img
                             src="/peop360_logo_powered.jpeg"
-                            alt="ATRIA 360"
+                            alt="ATRIA"
                             className="h-16 w-auto"
                             onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                             }}
                         />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">ATRIA 360</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">ATRIA</h1>
                     <p className="text-gray-600">Admin Portal Login</p>
                 </div>
 
@@ -313,7 +313,7 @@ function LoginPage({ onLogin }: { onLogin: (email: string, password: string) => 
                 </form>
 
                 <div className="mt-6 text-center text-sm text-gray-600">
-                    <p>Default credentials: admin@atria360.com / admin123</p>
+                    <p>Default credentials: admin@atria360.com / Admin@123</p>
                 </div>
             </div>
         </div>

@@ -93,7 +93,7 @@ function TestDispatcher() {
   // Determine which runner to use based on test type/slug
   const slug = testType?.toLowerCase();
 
-  if (slug === 'strength-360' || slug === 'psychometric') {
+  if (slug === 'strength-360' || slug === 'strength360' || slug === 'psychometric') {
     return (
       <TestRunner
         assignmentId={assignmentId}
@@ -105,7 +105,7 @@ function TestDispatcher() {
     );
   }
 
-  if (slug === 'beyonders' || slug === 'adaptive') {
+  if (slug === 'beyonders' || slug === 'beyonders_science' || slug === 'beyonders_non_science' || slug === 'adaptive') {
     return (
       <BeyondersTestRunner
         assignmentId={assignmentId}

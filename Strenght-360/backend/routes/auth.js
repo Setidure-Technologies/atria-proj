@@ -422,4 +422,69 @@ router.post('/verify-otp', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/auth/location
+ * Store user login location
+ */
+router.post('/location', requireAuth, async (req, res) => {
+    try {
+        const { latitude, longitude, address } = req.body;
+        const userId = req.user.id;
+
+        if (!latitude || !longitude) {
+            return res.status(400).json({ success: false, error: 'Location coordinates required' });
+        }
+
+        const { pool } = require('../services/database');
+        await pool.query(
+            `INSERT INTO login_locations (user_id, latitude, longitude, address, logged_at)
+             VALUES ($1, $2, $3, $4, NOW())`,
+            [userId, latitude, longitude, address || null]
+        );
+
+        res.json({ success: true, message: 'Location stored successfully' });
+    } catch (error) {
+        console.error('Store location error:', error);
+        res.status(500).json({ success: false, error: 'Failed to store location' });
+    }
+});
+
+/**
+ * GET /api/auth/my-location
+ * Get user's latest login location
+ */
+router.get('/my-location', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { pool } = require('../services/database');
+
+        const result = await pool.query(
+            `SELECT latitude, longitude, address, logged_at 
+             FROM login_locations 
+             WHERE user_id = $1 
+             ORDER BY logged_at DESC 
+             LIMIT 1`,
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.json({ success: true, location: null });
+        }
+
+        res.json({
+            success: true,
+            location: {
+                latitude: parseFloat(result.rows[0].latitude),
+                longitude: parseFloat(result.rows[0].longitude),
+                address: result.rows[0].address,
+                logged_at: result.rows[0].logged_at
+            }
+        });
+    } catch (error) {
+        console.error('Get location error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get location' });
+    }
+});
+
 module.exports = router;
+

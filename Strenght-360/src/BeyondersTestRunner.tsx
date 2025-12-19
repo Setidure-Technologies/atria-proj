@@ -3,17 +3,26 @@ import { apiDB } from './lib/apiDatabase';
 import { BEYONDERS_QUESTIONS, BeyondersQuestion } from './data/beyonders_questions';
 import { AlertCircle, CheckCircle, Clock, Brain } from 'lucide-react';
 
+interface TestConfig {
+    slug?: string;
+    runner?: string;
+    version?: number;
+    description?: string;
+}
+
 interface BeyondersTestRunnerProps {
     assignmentId: string;
-    token: string;
-    testType: 'beyonders_science' | 'beyonders_non_science';
+    token?: string | null;
+    testConfig?: TestConfig;
+    studentName?: string;
+    studentEmail?: string;
 }
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY; // Use environment variable only
 
-export default function BeyondersTestRunner({ assignmentId, token, testType }: BeyondersTestRunnerProps) {
+export default function BeyondersTestRunner({ assignmentId, token, testConfig, studentName, studentEmail }: BeyondersTestRunnerProps) {
     const [questions, setQuestions] = useState<BeyondersQuestion[]>([]);
     const [currentQIndex, setCurrentQIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -23,22 +32,43 @@ export default function BeyondersTestRunner({ assignmentId, token, testType }: B
     const [hint, setHint] = useState<string | null>(null);
     const [isHintLoading, setIsHintLoading] = useState(false);
     const [startTime] = useState(new Date());
+    const [error, setError] = useState<string | null>(null);
+
+    // Derive testType from testConfig.slug
+    const testType = testConfig?.slug || 'beyonders_science';
 
     useEffect(() => {
-        // Load questions based on test type
-        const stream = testType === 'beyonders_science' ? 'SCIENCE' : 'NON_SCIENCE';
-        const streamQuestions = BEYONDERS_QUESTIONS[stream];
+        console.log('🔄 BeyondersTestRunner: Loading questions for testType:', testType);
 
-        // Flatten questions: Easy -> Medium -> Hard
-        const allQuestions = [
-            ...streamQuestions.EASY,
-            ...streamQuestions.MEDIUM,
-            ...streamQuestions.HARD
-        ];
+        try {
+            // Load questions based on test type
+            const stream = testType === 'beyonders_non_science' ? 'NON_SCIENCE' : 'SCIENCE';
+            const streamQuestions = BEYONDERS_QUESTIONS[stream];
 
-        setQuestions(allQuestions);
-        setLoading(false);
+            if (!streamQuestions) {
+                console.error('❌ No questions found for stream:', stream);
+                setError(`No questions found for test type: ${testType}`);
+                setLoading(false);
+                return;
+            }
+
+            // Flatten questions: Easy -> Medium -> Hard
+            const allQuestions = [
+                ...(streamQuestions.EASY || []),
+                ...(streamQuestions.MEDIUM || []),
+                ...(streamQuestions.HARD || [])
+            ];
+
+            console.log('✅ Loaded', allQuestions.length, 'questions');
+            setQuestions(allQuestions);
+        } catch (err) {
+            console.error('❌ Error loading questions:', err);
+            setError('Failed to load test questions');
+        } finally {
+            setLoading(false);
+        }
     }, [testType]);
+
 
     const currentQuestion = questions[currentQIndex];
     const progressPercentage = ((currentQIndex + 1) / questions.length) * 100;
@@ -226,14 +256,14 @@ export default function BeyondersTestRunner({ assignmentId, token, testType }: B
                                     key={index}
                                     onClick={() => handleAnswer(option)}
                                     className={`w-full p-4 text-left border rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 ${answers[currentQuestion.id] === option
-                                            ? 'border-blue-500 bg-blue-50 shadow-md ring-1 ring-blue-500'
-                                            : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm'
+                                        ? 'border-blue-500 bg-blue-50 shadow-md ring-1 ring-blue-500'
+                                        : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm'
                                         }`}
                                 >
                                     <div className="flex items-center">
                                         <div className={`w-8 h-8 rounded-lg border mr-4 flex items-center justify-center text-sm font-medium transition-colors ${answers[currentQuestion.id] === option
-                                                ? 'border-blue-500 bg-blue-500 text-white'
-                                                : 'border-slate-300 text-slate-500'
+                                            ? 'border-blue-500 bg-blue-500 text-white'
+                                            : 'border-slate-300 text-slate-500'
                                             }`}>
                                             {String.fromCharCode(65 + index)}
                                         </div>
