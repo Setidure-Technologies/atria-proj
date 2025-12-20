@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Upload, Search, Edit2, Ban, CheckCircle, Mail, Key } from 'lucide-react';
+import { UserPlus, Upload, Search, Edit2, Ban, CheckCircle, Mail, Key, Trash2 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4902';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 interface User {
     id: string;
@@ -43,6 +43,29 @@ export function UserManagement({ token }: UserManagementProps) {
             console.error('Failed to fetch users:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteUser = async (userId: string, userName: string) => {
+        if (!window.confirm(`Are you sure you want to delete user "${userName}"? This will also delete all their test assignments and responses.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('User deleted successfully');
+                fetchUsers();
+            } else {
+                alert(data.error || 'Failed to delete user');
+            }
+        } catch (error) {
+            console.error('Failed to delete user:', error);
+            alert('Failed to delete user');
         }
     };
 
@@ -155,6 +178,13 @@ export function UserManagement({ token }: UserManagementProps) {
                                             <button className="text-orange-600 hover:text-orange-900 mr-3">
                                                 <Edit2 size={16} />
                                             </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(user.id, user.name)}
+                                                className="text-red-600 hover:text-red-900"
+                                                title="Delete User"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -226,6 +256,8 @@ function CreateUserModal({ token, onClose, onSuccess }: any) {
         password: '',
     });
     const [submitting, setSubmitting] = useState(false);
+    const [createdUser, setCreatedUser] = useState<{ name: string; inviteLink: string; emailSent: boolean } | null>(null);
+    const [copied, setCopied] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -243,8 +275,12 @@ function CreateUserModal({ token, onClose, onSuccess }: any) {
 
             const data = await response.json();
             if (data.success) {
-                alert(`User created successfully! ${formData.sendInvite ? 'Invitation email sent.' : ''}`);
-                onSuccess();
+                // Show success screen with invite link
+                setCreatedUser({
+                    name: formData.name,
+                    inviteLink: data.inviteLink,
+                    emailSent: data.emailSent,
+                });
             } else {
                 alert(data.error || 'Failed to create user');
             }
@@ -254,6 +290,85 @@ function CreateUserModal({ token, onClose, onSuccess }: any) {
             setSubmitting(false);
         }
     };
+
+    const copyToClipboard = async () => {
+        if (createdUser?.inviteLink) {
+            try {
+                await navigator.clipboard.writeText(createdUser.inviteLink);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = createdUser.inviteLink;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            }
+        }
+    };
+
+    // Success screen with invite link
+    if (createdUser) {
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg max-w-md w-full p-6">
+                    <div className="text-center mb-6">
+                        <div className="text-5xl mb-4">✅</div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">User Created!</h3>
+                        <p className="text-gray-600">
+                            <strong>{createdUser.name}</strong> has been added successfully.
+                        </p>
+                    </div>
+
+                    {createdUser.inviteLink && (
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Invitation Link
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={createdUser.inviteLink}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm font-mono truncate"
+                                />
+                                <button
+                                    onClick={copyToClipboard}
+                                    className={`px-4 py-2 rounded-lg font-medium transition ${copied
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-orange-600 text-white hover:bg-orange-700'
+                                        }`}
+                                >
+                                    {copied ? '✓ Copied!' : 'Copy'}
+                                </button>
+                            </div>
+                            {!createdUser.emailSent && (
+                                <p className="mt-2 text-sm text-yellow-600">
+                                    ⚠️ Email was not sent. Share the link manually.
+                                </p>
+                            )}
+                            {createdUser.emailSent && (
+                                <p className="mt-2 text-sm text-green-600">
+                                    ✓ Invitation email sent successfully.
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    <button
+                        onClick={onSuccess}
+                        className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                    >
+                        Done
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

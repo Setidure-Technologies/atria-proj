@@ -250,12 +250,20 @@ async function listUsers({ page = 1, limit = 50, status = null, role = null }) {
  * Verify user password
  */
 async function verifyPassword(email, password) {
+    console.log(`🔐 Verifying password for: ${email}`);
     const user = await getUserByEmail(email);
-    if (!user || !user.password_hash) {
+    if (!user) {
+        console.log(`❌ User not found: ${email}`);
+        return null;
+    }
+    if (!user.password_hash) {
+        console.log(`❌ User has no password hash: ${email}`);
         return null;
     }
 
+    console.log(`🔍 Comparing password for ${email} (length: ${password.length})...`);
     const isValid = await bcrypt.compare(password, user.password_hash);
+    console.log(`📊 Password valid: ${isValid}`);
     return isValid ? user : null;
 }
 

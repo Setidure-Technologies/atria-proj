@@ -7,7 +7,7 @@ import { ResponseViewer } from './components/ResponseViewer';
 import { BulkManagement } from './components/BulkManagement';
 
 // API Configuration
-const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:4902';
+const API_URL = (import.meta as any).env.VITE_API_URL || '';
 
 // Types
 interface User {
@@ -117,16 +117,15 @@ function AdminApp() {
                     <div className="flex justify-between items-center py-4">
                         <div className="flex items-center space-x-3">
                             <img
-                                src="/peop360_logo_powered.jpeg"
-                                alt="ATRIA"
-                                className="h-10 w-auto bg-white rounded px-2 py-1"
+                                src="atria-logo.jpg"
+                                alt="Atria University"
+                                className="h-10 md:h-12 w-auto bg-white rounded-lg px-2 py-1"
                                 onError={(e) => {
                                     e.currentTarget.style.display = 'none';
                                 }}
                             />
                             <div>
-                                <h1 className="text-2xl font-bold">ATRIA</h1>
-                                <p className="text-sm text-orange-100">Admin Portal</p>
+                                <h1 className="text-xl md:text-2xl font-bold">Admin Portal</h1>
                             </div>
                         </div>
 
@@ -261,18 +260,17 @@ function LoginPage({ onLogin }: { onLogin: (email: string, password: string) => 
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
                 <div className="text-center mb-8">
-                    <div className="flex justify-center mb-4">
+                    <div className="flex justify-center mb-6">
                         <img
-                            src="/peop360_logo_powered.jpeg"
-                            alt="ATRIA"
-                            className="h-16 w-auto"
+                            src="atria-logo.jpg"
+                            alt="Atria University"
+                            className="h-16 md:h-20 w-auto"
                             onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                             }}
                         />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">ATRIA</h1>
-                    <p className="text-gray-600">Admin Portal Login</p>
+                    <h2 className="text-xl font-semibold text-gray-700">Admin Portal</h2>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">

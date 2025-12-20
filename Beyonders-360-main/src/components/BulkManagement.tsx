@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Download, Users, FileText, CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react';
 
-const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:4902';
+const API_URL = (import.meta as any).env.VITE_API_URL || '';
 
 interface BulkOperation {
     id: string;

@@ -38,18 +38,37 @@ router.post('/profile', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Name and email are required' });
         }
 
-        // Upsert profile
-        await pool.query(`
-            INSERT INTO student_profiles (user_id, profile_json, is_completed, updated_at)
-            VALUES ($1, $2, true, NOW())
-            ON CONFLICT (user_id) 
-            DO UPDATE SET 
-                profile_json = $2,
-                is_completed = true,
-                updated_at = NOW()
-        `, [userId, studentData]);
+        // Use transaction to update both tables
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
 
-        res.json({ success: true });
+            // Upsert profile
+            await client.query(`
+                INSERT INTO student_profiles (user_id, profile_json, is_completed, updated_at)
+                VALUES ($1, $2, true, NOW())
+                ON CONFLICT (user_id) 
+                DO UPDATE SET 
+                    profile_json = $2,
+                    is_completed = true,
+                    updated_at = NOW()
+            `, [userId, studentData]);
+
+            // Also update user's profile_completed flag for verification gates
+            await client.query(`
+                UPDATE users SET profile_completed = TRUE WHERE id = $1
+            `, [userId]);
+
+            await client.query('COMMIT');
+            console.log(`✅ Profile completed for user: ${userId}`);
+
+            res.json({ success: true });
+        } catch (txError) {
+            await client.query('ROLLBACK');
+            throw txError;
+        } finally {
+            client.release();
+        }
     } catch (error) {
         console.error('Save profile error:', error);
         res.status(500).json({ error: 'Failed to save profile' });

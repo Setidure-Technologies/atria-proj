@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Eye, FileText, Filter } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4902';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 interface Response {
     id: string;

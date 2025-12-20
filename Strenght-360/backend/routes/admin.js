@@ -24,6 +24,7 @@ const {
     queueEmail,
     logAuditAction,
     getDashboardStats,
+    getResponseById,
 } = require('../services/database');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
@@ -139,26 +140,44 @@ router.post('/users', async (req, res) => {
             password,
         });
 
-        // Create invitation
-        if (sendInvite) {
+        // Always create invitation for candidates
+        let inviteLink = null;
+        let emailSent = false;
+
+        if (role === 'CANDIDATE' || sendInvite) {
             const invitation = await createInvitation(email, req.user.id);
+            inviteLink = `${process.env.APP_URL || 'http://localhost:4901'}/signup?token=${invitation.token}`;
 
-            const inviteLink = `${process.env.APP_URL || 'http://localhost:4901'}/register?token=${invitation.token}`;
+            // Try to queue email, but don't fail if SMTP unavailable
+            if (sendInvite) {
+                try {
+                    await queueEmail({
+                        toEmail: email,
+                        subject: 'Invitation to Atria 360',
+                        templateName: 'invitation',
+                        bodyHtml: `
+                            <h2>Welcome to ATRIA 360!</h2>
+                            <p>You have been invited to join the ATRIA 360 assessment platform.</p>
+                            <p><a href="${inviteLink}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Complete Registration</a></p>
+                            <p>Or copy this link: ${inviteLink}</p>
+                            <p><small>This link expires in 7 days.</small></p>
+                        `,
+                        bodyText: `Welcome to ATRIA 360! Complete your registration: ${inviteLink}`,
+                        templateData: {
+                            email,
+                            inviteLink,
+                            expiresAt: invitation.expires_at,
+                        },
+                    });
 
-            // Queue invitation email
-            await queueEmail({
-                toEmail: email,
-                subject: 'Invitation to Atria 360',
-                templateName: 'invitation',
-                templateData: {
-                    email,
-                    inviteLink,
-                    expiresAt: invitation.expires_at,
-                },
-            });
-
-            // Notify worker via Redis
-            redis.publish('email:new', JSON.stringify({ emailId: 'pending' }));
+                    // Notify worker via Redis
+                    redis.publish('email:new', JSON.stringify({ emailId: 'pending' }));
+                    emailSent = true;
+                } catch (emailError) {
+                    console.warn('⚠️ Failed to queue invite email (SMTP may be unavailable):', emailError.message);
+                    // Continue - invite link is still valid
+                }
+            }
         }
 
         // Log audit
@@ -180,7 +199,8 @@ router.post('/users', async (req, res) => {
                 name: user.name,
                 status: user.status,
             },
-            inviteSent: sendInvite,
+            inviteLink,  // Always return invite link if created
+            emailSent,
         });
     } catch (error) {
         console.error('Create user error:', error);
@@ -1008,12 +1028,14 @@ router.get('/report-data/:responseId', async (req, res) => {
 router.get('/reports/csv', async (req, res) => {
     try {
         const { testId } = req.query;
+        const appUrl = process.env.APP_URL || 'https://atria.peop360.com';
 
         let query = `
             SELECT 
                 r.id,
                 u.name as user_name,
                 u.email as user_email,
+                u.phone as user_phone,
                 t.title as test_title,
                 r.primary_talent_domain,
                 r.executing_score,
@@ -1040,23 +1062,26 @@ router.get('/reports/csv', async (req, res) => {
 
         const result = await require('../services/database').pool.query(query, params);
 
-        // Convert to CSV
+        // Convert to CSV - Added Phone and Report Link columns
         const fields = [
-            'Response ID', 'Name', 'Email', 'Test Title',
+            'Response ID', 'Name', 'Email', 'Phone', 'Test Title',
             'Primary Domain', 'Executing', 'Influencing', 'Relationship Building', 'Strategic Thinking',
-            'Submitted At', 'Auto Submit', 'Questions Answered', 'Score Details'
+            'Submitted At', 'Auto Submit', 'Questions Answered', 'Report Download Link'
         ];
 
         let csv = fields.join(',') + '\n';
 
         result.rows.forEach(row => {
-            const scoreDetails = row.score_json ? JSON.stringify(row.score_json).replace(/"/g, '""') : '';
+            // Construct report download URL with token for direct browser access
+            const token = req.headers.authorization ? req.headers.authorization.substring(7) : (req.query.token || '');
+            const reportLink = `${appUrl}/api/admin/reports/${row.id}/pdf?token=${token}`;
 
             const line = [
                 row.id,
-                `"${row.user_name}"`,
-                `"${row.user_email}"`,
-                `"${row.test_title}"`,
+                `"${row.user_name || ''}"`,
+                `"${row.user_email || ''}"`,
+                `"${row.user_phone || ''}"`,
+                `"${row.test_title || ''}"`,
                 `"${row.primary_talent_domain || ''}"`,
                 row.executing_score || '',
                 row.influencing_score || '',
@@ -1064,8 +1089,8 @@ router.get('/reports/csv', async (req, res) => {
                 row.strategic_thinking_score || '',
                 `"${new Date(row.submitted_at).toISOString()}"`,
                 row.is_auto_submit ? 'Yes' : 'No',
-                row.questions_answered,
-                `"${scoreDetails}"`
+                row.questions_answered || '',
+                `"${reportLink}"`
             ].join(',');
 
             csv += line + '\n';
@@ -1074,10 +1099,143 @@ router.get('/reports/csv', async (req, res) => {
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="reports-${new Date().toISOString().split('T')[0]}.csv"`);
         res.send(csv);
-
     } catch (error) {
         console.error('Export CSV error:', error);
         res.status(500).json({ success: false, error: 'Failed to export CSV' });
+    }
+});
+
+/**
+ * GET /api/admin/reports/:id/pdf
+ * Download PDF report for a specific response
+ */
+router.get('/reports/:id/pdf', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const response = await getResponseById(id);
+
+        if (!response) {
+            return res.status(404).json({
+                success: false,
+                error: 'Test response not found',
+            });
+        }
+
+        // Generate PDF on-the-fly from database data
+        const { processPsychometricData, generateComprehensivePDF } = require('../comprehensivePdfGenerator');
+        const { generateBeyondersPDF } = require('../beyondersPdfGenerator');
+
+        let result;
+
+        if (response.test_type && response.test_type.startsWith('beyonders')) {
+            // Handle Beyonders PDF
+            const beyondersData = {
+                student_name: response.user_name,
+                student_email: response.user_email,
+                test_title: response.test_title,
+                score_json: response.score_json || {},
+                responses: response.responses_json
+            };
+            result = await generateBeyondersPDF(beyondersData);
+        } else {
+            // Handle Psychometric PDF (Default)
+            const testResponse = {
+                id: response.id,
+                student_name: response.user_name,
+                student_email: response.user_email,
+                responses: response.responses_json,
+                executing_score: response.executing_score,
+                influencing_score: response.influencing_score,
+                relationship_building_score: response.relationship_building_score,
+                strategic_thinking_score: response.strategic_thinking_score,
+                primary_talent_domain: response.primary_talent_domain,
+                detailed_scores: response.detailed_scores,
+            };
+
+            const processedData = processPsychometricData(testResponse);
+            result = await generateComprehensivePDF(processedData);
+        }
+
+        if (!result.success) {
+            return res.status(500).json({
+                success: false,
+                error: 'PDF generation failed',
+            });
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `strength-report-${(response.user_name || 'candidate').replace(/\s+/g, '_')}-${timestamp}.pdf`;
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.send(result.buffer);
+    } catch (error) {
+        console.error('PDF generation error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate PDF',
+        });
+    }
+});
+
+/**
+ * DELETE /api/admin/users/:id
+ * Delete a user and all associated data
+ */
+router.delete('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    const client = await require('../services/database').pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // 1. Handle audit logs
+        await client.query('DELETE FROM audit_logs WHERE user_id = $1', [id]);
+
+        // 2. Handle invitations (both created_by and user_id)
+        await client.query('UPDATE invitations SET created_by = NULL WHERE created_by = $1', [id]);
+        await client.query('UPDATE invitations SET user_id = NULL WHERE user_id = $1', [id]);
+
+        // 3. Handle tests (created_by)
+        await client.query('UPDATE tests SET created_by = NULL WHERE created_by = $1', [id]);
+
+        // 4. Handle bulk imports (created_by)
+        await client.query('UPDATE bulk_imports SET created_by = NULL WHERE created_by = $1', [id]);
+
+        // 5. Handle assignments (assigned_by)
+        await client.query('UPDATE assignments SET assigned_by = NULL WHERE assigned_by = $1', [id]);
+
+        // 6. Handle login locations
+        await client.query('DELETE FROM login_locations WHERE user_id = $1', [id]);
+
+        // 7. Delete responses (cascaded from assignments, but let's be explicit)
+        await client.query(`
+            DELETE FROM responses 
+            WHERE assignment_id IN (SELECT id FROM assignments WHERE user_id = $1)
+        `, [id]);
+
+        // 8. Delete assignments (user_id)
+        await client.query('DELETE FROM assignments WHERE user_id = $1', [id]);
+
+        // 9. Delete user roles (cascaded, but let's be safe)
+        await client.query('DELETE FROM user_roles WHERE user_id = $1', [id]);
+
+        // 10. Finally delete user
+        const result = await client.query('DELETE FROM users WHERE id = $1', [id]);
+
+        if (result.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        await client.query('COMMIT');
+        res.json({ success: true, message: 'User and all associated data deleted successfully' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Delete user error:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete user' });
+    } finally {
+        client.release();
     }
 });
 

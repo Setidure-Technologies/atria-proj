@@ -38,16 +38,22 @@ function verifyToken(token) {
  */
 async function requireAuth(req, res, next) {
     try {
-        // Get token from Authorization header
+        // Get token from Authorization header or query parameter
+        let token = null;
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7);
+        } else if (req.query.token) {
+            token = req.query.token;
+        }
+
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 error: 'No token provided',
             });
         }
-
-        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
         // Verify token
         const decoded = verifyToken(token);

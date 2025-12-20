@@ -9,7 +9,7 @@ function processPsychometricData(webhookData) {
     // 1) Extract the main data object - handle different possible structures
     let body = null;
     let data = null;
-    
+
     if (webhookData.body && webhookData.body.data) {
         // Structure: { body: { data: {...} } }
         body = webhookData.body;
@@ -23,16 +23,16 @@ function processPsychometricData(webhookData) {
         body = webhookData;
         data = webhookData;
     }
-    
+
     // Validate that we have the essential data
     if (!data) {
         throw new Error('No assessment data found in webhook payload');
     }
-    
+
     if (!data.student_name || !data.student_email) {
         throw new Error('Missing student information (name or email) in the data');
     }
-    
+
     // 2) Candidate information
     const candidate = {
         id: data.id || 'Unknown',
@@ -40,7 +40,7 @@ function processPsychometricData(webhookData) {
         email: data.student_email,
         created_at: data.created_at || new Date().toISOString()
     };
-    
+
     // 3) Domain scores with proper fallbacks
     const detailedScores = data.detailed_scores || {};
     const domainScores = {
@@ -50,10 +50,10 @@ function processPsychometricData(webhookData) {
         strategic_thinking: parseFloat(detailedScores.strategicThinking || data.strategic_thinking_score || 0),
         primary_talent_domain: data.primary_talent_domain || 'Not Specified'
     };
-    
+
     // 4) Process subdomain/strength scores
     let subdomains = detailedScores.subdomains || {};
-    
+
     // If no subdomains found, create a fallback structure
     if (!subdomains || Object.keys(subdomains).length === 0) {
         console.warn('Warning: No subdomain scores found. Using domain scores as fallback.');
@@ -64,12 +64,12 @@ function processPsychometricData(webhookData) {
             'Achiever': domainScores.executing
         };
     }
-    
+
     // Theme → Domain mapping (CliftonStrengths style)
     const domainMap = {
         // Executing Domain
         'Achiever': "Executing",
-        'Arranger': "Executing", 
+        'Arranger': "Executing",
         'Belief': "Executing",
         'Consistency': "Executing",
         'Deliberative': "Executing",
@@ -109,13 +109,13 @@ function processPsychometricData(webhookData) {
         'Learner': "Strategic Thinking",
         'Strategic': "Strategic Thinking"
     };
-    
+
     // Convert strength scores
     const strengthScores = {};
     for (const [name, rawScore] of Object.entries(subdomains)) {
         strengthScores[name] = parseFloat(rawScore) || 0.0;
     }
-    
+
     // Create list of all themes with scores and domains
     const allThemes = [];
     for (const [name, score] of Object.entries(strengthScores)) {
@@ -125,7 +125,7 @@ function processPsychometricData(webhookData) {
             domain: domainMap[name] || "Unknown"
         });
     }
-    
+
     // Sort by score (descending), then alphabetically
     allThemes.sort((a, b) => {
         if (a.score !== b.score) {
@@ -133,10 +133,10 @@ function processPsychometricData(webhookData) {
         }
         return a.name.localeCompare(b.name);
     });
-    
+
     // Get top 5
     const top5 = allThemes.slice(0, 5);
-    
+
     // Generate all possible pairs from top 5
     const top5Pairs = [];
     for (let i = 0; i < top5.length; i++) {
@@ -148,7 +148,7 @@ function processPsychometricData(webhookData) {
             });
         }
     }
-    
+
     const processedData = {
         candidate: candidate,
         domainScores: domainScores,
@@ -159,7 +159,7 @@ function processPsychometricData(webhookData) {
         responses: data.responses,
         raw: body
     };
-    
+
     return processedData;
 }
 
@@ -369,7 +369,7 @@ function getElaborateThemeDescription(themeName) {
             ]
         }
     };
-    
+
     // Return default structure if theme not found
     const defaultStructure = {
         'description': 'This strength represents a unique talent pattern that influences your behavior and thinking.',
@@ -381,7 +381,7 @@ function getElaborateThemeDescription(themeName) {
         'career': ['Apply in professional settings', 'Use for career advancement'],
         'development_tips': ['Continue developing this strength', 'Balance with other approaches']
     };
-    
+
     return themeData[themeName] || defaultStructure;
 }
 
@@ -409,10 +409,10 @@ function getDetailedComboAnalysis(theme1, theme2) {
         }
         // Add more combinations as needed
     };
-    
+
     const key = `${theme1},${theme2}`;
     const reverseKey = `${theme2},${theme1}`;
-    
+
     const defaultCombo = {
         'name': `${theme1} + ${theme2} Combination`,
         'positive_synergy': `The combination of ${theme1} and ${theme2} creates a unique blend of talents that can be powerfully applied across various contexts.`,
@@ -428,7 +428,7 @@ function getDetailedComboAnalysis(theme1, theme2) {
             `Practice integrating both strengths smoothly`
         ]
     };
-    
+
     return comboData[key] || comboData[reverseKey] || defaultCombo;
 }
 
@@ -448,9 +448,9 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
                     right: 36
                 }
             });
-            
+
             const chunks = [];
-            
+
             // Collect PDF data
             doc.on('data', chunk => chunks.push(chunk));
             doc.on('end', () => {
@@ -463,97 +463,205 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
             });
 
             const candidate = processedData.candidate;
-            
+
             // Colors matching Python version
             const primaryColor = '#2E86AB';
             const secondaryColor = '#A23B72';
-            
+            const atriaBlue = '#1e40af';
+            const atriaGreen = '#16a34a';
+
+            // Helper function for footer
+            const addFooter = (doc) => {
+                const bottomMargin = 30;
+                const savedY = doc.y;
+                doc.fontSize(10)
+                    .fillColor('#94a3b8')
+                    .text('© 2025 Atria University. All rights reserved.', 50, doc.page.height - bottomMargin - 15, { align: 'center', lineBreak: false });
+
+                doc.fontSize(9)
+                    .fillColor('#94a3b8')
+                    .text('For more information, visit www.atriauniversity.edu.in', 50, doc.page.height - bottomMargin, { align: 'center', lineBreak: false });
+                doc.y = savedY;
+            };
+
+            // Add footer to the first page
+            addFooter(doc);
+
+            // Listen for new pages to add footer
+            doc.on('pageAdded', () => {
+                addFooter(doc);
+            });
+
             // 1. Enhanced Visual Cover Page
-            doc.fontSize(24)
-               .fillColor('#2563eb')
-               .text('StrengthsFinder 360 Report', 50, 50);
-            doc.fontSize(16)
-               .fillColor('#64748b')
-               .text('Personalized Talent Assessment Results', 50, 85);
-            
-            // Candidate Information Box
-            doc.fontSize(18)
-               .fillColor('#1e293b')
-               .text('Candidate Information', 50, 130);
+            // Add Logo
+            const logoPath = path.join(__dirname, '..', 'public', 'atria-logo2.png');
+            if (fs.existsSync(logoPath)) {
+                doc.image(logoPath, doc.page.width / 2 - 40, 40, { width: 80 });
+            }
+
+            doc.moveDown(4);
+
+            // Atria University Title
+            doc.fontSize(28)
+                .fillColor(atriaBlue)
+                .text('ATRIA UNIVERSITY', { align: 'center' });
+
+            doc.moveDown(0.5);
+
+            // Subtitle
+            doc.fontSize(14)
+                .fillColor('#64748b')
+                .text('Test Report - Institution Overview', { align: 'center' });
+
+            // Date
             doc.fontSize(12)
-               .fillColor('#475569');
-            doc.text(`Name: ${candidate.name}`, 50, 160);
-            doc.text(`Email: ${candidate.email}`, 50, 180);
-            doc.text(`Assessment Date: ${new Date(candidate.created_at).toLocaleDateString()}`, 50, 200);
-            doc.text(`Report ID: ${candidate.id}`, 50, 220);
-            
+                .fillColor('#94a3b8')
+                .text(`Report Generated: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, { align: 'center' });
+
+            doc.moveDown(1.5);
+
+            // Horizontal Line
+            doc.moveTo(50, doc.y)
+                .lineTo(doc.page.width - 50, doc.y)
+                .strokeColor('#cbd5e1')
+                .lineWidth(1)
+                .stroke();
+
+            doc.moveDown(2);
+
+            // ABOUT ATRIA UNIVERSITY Section
+            doc.rect(50, doc.y, doc.page.width - 100, 280)
+                .fillColor('#f8fafc')
+                .fill();
+
+            // Left accent border
+            doc.rect(50, doc.y, 4, 280)
+                .fillColor(atriaBlue)
+                .fill();
+
+            const aboutStartY = doc.y + 20;
+            doc.fontSize(16)
+                .fillColor(atriaBlue)
+                .text('ABOUT ATRIA UNIVERSITY', 70, aboutStartY);
+
+            doc.moveDown(1);
+
+            const textWidth = doc.page.width - 140;
+
+            // Foundation & Vision
+            doc.fontSize(11)
+                .fillColor(atriaBlue)
+                .text('Foundation & Vision: ', 70, doc.y, { continued: true })
+                .fillColor('#334155')
+                .text('Atria University in Bengaluru is India’s first liberal STEM university, established in 2018 by the Atria Group, a well-known South Indian conglomerate. The university aims to transform higher education by blending scientific depth with interdisciplinary choice and real-world application.', {
+                    width: textWidth,
+                    align: 'justify'
+                });
+
+            doc.moveDown(1.5);
+
+            // Academic Approach
+            doc.fontSize(11)
+                .fillColor(atriaBlue)
+                .text('Academic Approach: ', 70, doc.y, { continued: true })
+                .fillColor('#334155')
+                .text('It offers interdisciplinary undergraduate programs in science, technology, business, and design, with majors such as Digital Transformation, Life Sciences, Energy Sciences, and eMobility. The institution focuses on experiential and project-based learning.', {
+                    width: textWidth,
+                    align: 'justify'
+                });
+
+            doc.moveDown(1.5);
+
+            // Key Strengths
+            doc.fontSize(11)
+                .fillColor(atriaBlue)
+                .text('Key Strengths: ', 70, doc.y, { continued: true })
+                .fillColor('#334155')
+                .text('The university emphasizes personalized education, holistic development, and strong industry connections. State-of-the-art infrastructure, experienced faculty, and a learner-centric model ensure students are prepared for the evolving global landscape.', {
+                    width: textWidth,
+                    align: 'justify'
+                });
+
+            // Candidate Information Box (Moved to next page or bottom)
+            doc.addPage();
+
+            doc.fontSize(18)
+                .fillColor('#1e293b')
+                .text('Candidate Information', 50, 50);
+            doc.fontSize(12)
+                .fillColor('#475569');
+            doc.text(`Name: ${candidate.name}`, 50, 80);
+            doc.text(`Email: ${candidate.email}`, 50, 100);
+            doc.text(`Assessment Date: ${new Date(candidate.created_at).toLocaleDateString()}`, 50, 120);
+            doc.text(`Report ID: ${candidate.id}`, 50, 140);
+
             // Primary Talent Domain Highlight
             doc.fontSize(16)
-               .fillColor('#1e293b')
-               .text('Primary Talent Domain', 50, 260);
+                .fillColor('#1e293b')
+                .text('Primary Talent Domain', 50, 180);
             doc.fontSize(14)
-               .fillColor('#2563eb')
-               .text(processedData.domainScores.primary_talent_domain, 50, 285);
-            
+                .fillColor('#2563eb')
+                .text(processedData.domainScores.primary_talent_domain, 50, 205);
+
             doc.moveDown(2);
             doc.fontSize(11)
-               .fillColor('#374151')
-               .text('This comprehensive report provides detailed insights into your unique strengths pattern, practical applications, and development strategies for personal and professional growth.', 50, 320, {
-                width: 500,
-                align: 'justify'
-            });
-            
+                .fillColor('#374151')
+                .text('This comprehensive report provides detailed insights into your unique strengths pattern, practical applications, and development strategies for personal and professional growth.', 50, 240, {
+                    width: 500,
+                    align: 'justify'
+                });
+
             doc.addPage();
-            
+
             // 2. Visual Domain Scores Section with Progress Bars
-            doc.fontSize(18)
-               .fillColor('#1e293b')
-               .text('Talent Domain Scores', 50, 50);
-            
-            let yPosition = 90;
+            doc.fontSize(20)
+                .fillColor('#1e293b')
+                .text('Talent Domain Scores', 50, 50);
+
+            let yPosition = 100;
             const domains = [
-                { 
-                    name: 'Executing', 
-                    score: processedData.domainScores.executing, 
+                {
+                    name: 'Executing',
+                    score: processedData.domainScores.executing,
                     color: '#dc2626',
                     description: 'People who execute make things happen'
                 },
-                { 
-                    name: 'Influencing', 
-                    score: processedData.domainScores.influencing, 
+                {
+                    name: 'Influencing',
+                    score: processedData.domainScores.influencing,
                     color: '#ea580c',
                     description: 'People who influence help teams reach broader audiences'
                 },
-                { 
-                    name: 'Relationship Building', 
-                    score: processedData.domainScores.relationship_building, 
+                {
+                    name: 'Relationship Building',
+                    score: processedData.domainScores.relationship_building,
                     color: '#16a34a',
                     description: 'People who build relationships hold teams together'
                 },
-                { 
-                    name: 'Strategic Thinking', 
-                    score: processedData.domainScores.strategic_thinking, 
+                {
+                    name: 'Strategic Thinking',
+                    score: processedData.domainScores.strategic_thinking,
                     color: '#2563eb',
                     description: 'People who think strategically focus on what could be'
                 }
             ];
-            
+
             domains.forEach(domain => {
                 // Domain name
                 doc.fontSize(14)
-                   .fillColor('#374151')
-                   .text(domain.name, 50, yPosition);
-                
+                    .fillColor('#374151')
+                    .text(domain.name, 50, yPosition);
+
                 // Score
                 doc.fontSize(12)
-                   .fillColor('#6b7280')
-                   .text(`${domain.score.toFixed(1)}`, 250, yPosition + 2);
-                
+                    .fillColor('#6b7280')
+                    .text(`${domain.score.toFixed(1)}`, 250, yPosition + 2);
+
                 // Progress bar background
                 doc.rect(300, yPosition + 2, 200, 12)
-                   .fillColor('#e5e7eb')
-                   .fill();
-                
+                    .fillColor('#e5e7eb')
+                    .fill();
+
                 // Progress bar fill
                 const maxScore = Math.max(...domains.map(d => d.score));
                 let fillWidth = 0;
@@ -562,160 +670,160 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
                 }
                 if (!isNaN(fillWidth) && fillWidth > 0) {
                     doc.rect(300, yPosition + 2, fillWidth, 12)
-                       .fillColor(domain.color)
-                       .fill();
+                        .fillColor(domain.color)
+                        .fill();
                 }
-                
+
                 // Description
                 doc.fontSize(9)
-                   .fillColor('#6b7280')
-                   .text(domain.description, 50, yPosition + 18, { width: 450 });
-                
+                    .fillColor('#6b7280')
+                    .text(domain.description, 50, yPosition + 18, { width: 450 });
+
                 yPosition += 45;
             });
-            
+
             // Primary Talent Domain Highlight Box
             doc.rect(50, yPosition + 20, 500, 60)
-               .fillColor('#f8fafc')
-               .stroke('#e2e8f0');
-            
+                .fillColor('#f8fafc')
+                .stroke('#e2e8f0');
+
             doc.fontSize(16)
-               .fillColor('#1e293b')
-               .text('Primary Talent Domain', 60, yPosition + 35);
+                .fillColor('#1e293b')
+                .text('Primary Talent Domain', 60, yPosition + 35);
             doc.fontSize(14)
-               .fillColor('#2563eb')
-               .text(processedData.domainScores.primary_talent_domain, 60, yPosition + 55);
-            
+                .fillColor('#2563eb')
+                .text(processedData.domainScores.primary_talent_domain, 60, yPosition + 55);
+
             doc.addPage();
-            
+
             // 3. Visual Top Themes Section
-            doc.fontSize(18)
-               .fillColor('#1e293b')
-               .text('Top Talent Themes', 50, 50);
-            
+            doc.fontSize(20)
+                .fillColor('#1e293b')
+                .text('Top Talent Themes', 50, 50);
+
             // Sort themes by score and get top 10 for visual display
             const sortedThemes = Object.entries(processedData.strength_scores)
-                .sort(([,a], [,b]) => b - a)
+                .sort(([, a], [, b]) => b - a)
                 .slice(0, 10);
-            
+
             // Check if all scores are zero (incomplete test)
-            const allScoresZero = sortedThemes.every(([,score]) => score === 0);
-            
+            const allScoresZero = sortedThemes.every(([, score]) => score === 0);
+
             if (allScoresZero) {
                 // Handle incomplete test case
                 doc.fontSize(14)
-                   .fillColor('#dc2626')
-                   .text('Assessment Incomplete', 50, 90);
-                   
+                    .fillColor('#dc2626')
+                    .text('Assessment Incomplete', 50, 90);
+
                 doc.fontSize(12)
-                   .fillColor('#6b7280')
-                   .text('This assessment appears to be incomplete. All scores are zero, which suggests the test was not properly completed.', 50, 120, {
-                       width: 500,
-                       align: 'left'
-                   });
-                   
+                    .fillColor('#6b7280')
+                    .text('This assessment appears to be incomplete. All scores are zero, which suggests the test was not properly completed.', 50, 120, {
+                        width: 500,
+                        align: 'left'
+                    });
+
                 doc.text('Please retake the assessment to generate a comprehensive report.', 50, 160, {
                     width: 500,
                     align: 'left'
                 });
-                
+
                 // Skip to footer
                 doc.fontSize(10)
-                   .fillColor('#9ca3af')
-                   .text('This report is generated by StrengthsFinder 360 Assessment Tool', 50, doc.page.height - 70, { align: 'center' });
-                   
+                    .fillColor('#9ca3af')
+                    .text('This report is generated by StrengthsFinder 360 Assessment Tool', 50, doc.page.height - 70, { align: 'center' });
+
                 doc.fontSize(8)
-                   .fillColor('#6b7280')
-                   .text(`Generated on ${new Date().toLocaleDateString()} • Report ID: ${candidate.id}`, 50, doc.page.height - 50, { align: 'center' });
-                
+                    .fillColor('#6b7280')
+                    .text(`Generated on ${new Date().toLocaleDateString()} • Report ID: ${candidate.id}`, 50, doc.page.height - 50, { align: 'center' });
+
                 // Finalize PDF early for incomplete tests
                 doc.end();
                 return;
             }
-            
+
             let themeYPosition = 90;
             sortedThemes.forEach(([theme, score], index) => {
                 const isTop5 = index < 5;
                 const bgColor = isTop5 ? '#f0f9ff' : '#f9fafb';
                 const borderColor = isTop5 ? '#3b82f6' : '#e5e7eb';
                 const textColor = isTop5 ? '#1e40af' : '#374151';
-                
+
                 // Theme box
                 doc.rect(50, themeYPosition, 500, 25)
-                   .fillColor(bgColor)
-                   .stroke(borderColor);
-                
+                    .fillColor(bgColor)
+                    .stroke(borderColor);
+
                 doc.fontSize(12)
-                   .fillColor(textColor)
-                   .text(`${index + 1}. ${theme}`, 60, themeYPosition + 8);
-                
+                    .fillColor(textColor)
+                    .text(`${index + 1}. ${theme}`, 60, themeYPosition + 8);
+
                 doc.fontSize(10)
-                   .fillColor('#6b7280')
-                   .text(`Score: ${typeof score === 'number' ? score.toFixed(1) : score}`, 350, themeYPosition + 8);
-                
+                    .fillColor('#6b7280')
+                    .text(`Score: ${typeof score === 'number' ? score.toFixed(1) : score}`, 350, themeYPosition + 8);
+
                 // Mini progress bar
                 const barWidth = 80;
-                const maxThemeScore = Math.max(...sortedThemes.map(([,s]) => s));
+                const maxThemeScore = Math.max(...sortedThemes.map(([, s]) => s));
                 let themeFillWidth = 0;
                 if (maxThemeScore > 0 && !isNaN(score) && score > 0) {
                     themeFillWidth = (score / maxThemeScore) * barWidth;
                 }
-                
+
                 doc.rect(450, themeYPosition + 8, barWidth, 8)
-                   .fillColor('#e5e7eb')
-                   .fill();
-                
+                    .fillColor('#e5e7eb')
+                    .fill();
+
                 if (!isNaN(themeFillWidth) && themeFillWidth > 0) {
                     doc.rect(450, themeYPosition + 8, themeFillWidth, 8)
-                       .fillColor(isTop5 ? '#3b82f6' : '#9ca3af')
-                       .fill();
+                        .fillColor(isTop5 ? '#3b82f6' : '#9ca3af')
+                        .fill();
                 }
-                
+
                 themeYPosition += 30;
             });
-            
+
             doc.addPage();
-            
+
             // 4. Enhanced Executive Summary with Visual Elements
-            doc.fontSize(18)
-               .fillColor('#1e293b')
-               .text('Executive Summary', 50, 50);
-            
+            doc.fontSize(20)
+                .fillColor('#1e293b')
+                .text('Executive Summary', 50, 50);
+
             // Summary box with background
             doc.rect(50, 80, 500, 120)
-               .fillColor('#f8fafc')
-               .stroke('#e2e8f0');
-            
+                .fillColor('#f8fafc')
+                .stroke('#e2e8f0');
+
             doc.fontSize(11)
-               .fillColor('#374151')
-               .text(`This Strength-360 assessment reveals that ${candidate.name} demonstrates a distinctive talent pattern with dominant emphasis on ${processedData.domainScores.primary_talent_domain}. Your unique combination of strengths suggests particular aptitudes for roles requiring strategic thinking, innovation, and complex problem-solving.`, 60, 95, {
-                   width: 480,
-                   align: 'justify'
-               });
-            
+                .fillColor('#374151')
+                .text(`This Strength-360 assessment reveals that ${candidate.name} demonstrates a distinctive talent pattern with dominant emphasis on ${processedData.domainScores.primary_talent_domain}. Your unique combination of strengths suggests particular aptitudes for roles requiring strategic thinking, innovation, and complex problem-solving.`, 60, 95, {
+                    width: 480,
+                    align: 'justify'
+                });
+
             doc.text('This comprehensive report provides detailed insights into your unique strengths pattern, practical applications, and development strategies for personal and professional growth across all life domains.', 60, 150, {
                 width: 480,
                 align: 'justify'
             });
-            
+
             doc.addPage();
-            
+
             // 5. Your Top 5 Signature Strengths Analysis with Enhanced Visuals
-            doc.fontSize(18)
-               .fillColor('#1e293b')
-               .text('Your Top 5 Signature Strengths', 50, 50);
-            
+            doc.fontSize(20)
+                .fillColor('#1e293b')
+                .text('Your Top 5 Signature Strengths', 50, 50);
+
             let currentY = 80;
-            
+
             processedData.top5.forEach((theme, index) => {
                 const themeInfo = getElaborateThemeDescription(theme.name);
-                
+
                 // Check if we need a new page
                 if (currentY > 600) {
                     doc.addPage();
                     currentY = 50;
                 }
-                
+
                 // Enhanced Strength Header with colored box
                 const domainColors = {
                     'Executing': '#dc2626',
@@ -723,111 +831,111 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
                     'Relationship Building': '#16a34a',
                     'Strategic Thinking': '#2563eb'
                 };
-                
+
                 const themeColor = domainColors[themeInfo.domain] || '#6b7280';
-                
+
                 // Colored header box
                 doc.rect(50, currentY, 500, 30)
-                   .fillColor('#f8fafc')
-                   .stroke(themeColor);
-                
+                    .fillColor('#f8fafc')
+                    .stroke(themeColor);
+
                 doc.fontSize(14)
-                   .fillColor(themeColor)
-                   .text(`${index + 1}. ${theme.name}`, 60, currentY + 8);
-                
+                    .fillColor(themeColor)
+                    .text(`${index + 1}. ${theme.name}`, 60, currentY + 8);
+
                 doc.fontSize(10)
-                   .fillColor('#6b7280')
-                   .text(`${themeInfo.domain} Domain • Score: ${theme.score.toFixed(1)}`, 60, currentY + 23);
-                
+                    .fillColor('#6b7280')
+                    .text(`${themeInfo.domain} Domain • Score: ${theme.score.toFixed(1)}`, 60, currentY + 23);
+
                 currentY += 40;
-                
+
                 // Core Description with background
                 doc.rect(50, currentY, 500, 15)
-                   .fillColor('#eff6ff')
-                   .fill();
-                   
+                    .fillColor('#eff6ff')
+                    .fill();
+
                 doc.fontSize(10)
-                   .fillColor('#1e40af')
-                   .text('Core Description:', 60, currentY + 3, { underline: true });
+                    .fillColor('#1e40af')
+                    .text('Core Description:', 60, currentY + 3, { underline: true });
                 currentY += 20;
-                
+
                 doc.fontSize(10)
-                   .fillColor('#374151')
-                   .text(themeInfo.description, 60, currentY, { width: 480 });
+                    .fillColor('#374151')
+                    .text(themeInfo.description, 60, currentY, { width: 480 });
                 currentY = doc.y + 10;
-                
+
                 // Elaborate Description with subtle background
                 doc.rect(50, currentY, 500, 15)
-                   .fillColor('#f0fdf4')
-                   .fill();
-                   
+                    .fillColor('#f0fdf4')
+                    .fill();
+
                 doc.fontSize(10)
-                   .fillColor('#166534')
-                   .text('Detailed Analysis:', 60, currentY + 3, { underline: true });
+                    .fillColor('#166534')
+                    .text('Detailed Analysis:', 60, currentY + 3, { underline: true });
                 currentY += 20;
-                
+
                 doc.fontSize(10)
-                   .fillColor('#374151')
-                   .text(themeInfo.elaborate_description, 60, currentY, { width: 480 });
+                    .fillColor('#374151')
+                    .text(themeInfo.elaborate_description, 60, currentY, { width: 480 });
                 currentY = doc.y + 10;
-                
+
                 // Key Characteristics in a box
                 doc.rect(50, currentY, 500, 15)
-                   .fillColor('#fef3c7')
-                   .fill();
-                   
+                    .fillColor('#fef3c7')
+                    .fill();
+
                 doc.fontSize(10)
-                   .fillColor('#92400e')
-                   .text('Key Characteristics:', 60, currentY + 3, { underline: true });
+                    .fillColor('#92400e')
+                    .text('Key Characteristics:', 60, currentY + 3, { underline: true });
                 currentY += 20;
-                
+
                 themeInfo.core_characteristics.forEach(char => {
                     doc.fontSize(9)
-                       .fillColor('#374151')
-                       .text(`• ${char}`, 65, currentY, { width: 470 });
+                        .fillColor('#374151')
+                        .text(`• ${char}`, 65, currentY, { width: 470 });
                     currentY = doc.y + 3;
                 });
-                
+
                 currentY += 10;
-                
+
                 // Applications sections with colored backgrounds
                 const applicationSections = [
                     { title: 'Personal Life Applications:', items: themeInfo.personal_life, color: '#fef2f2', textColor: '#991b1b' },
                     { title: 'Education Applications:', items: themeInfo.education, color: '#f0f9ff', textColor: '#1e40af' },
                     { title: 'Career Applications:', items: themeInfo.career, color: '#f0fdf4', textColor: '#166534' }
                 ];
-                
+
                 applicationSections.forEach(section => {
                     // Check for page break before each section
                     if (currentY > 650) {
                         doc.addPage();
                         currentY = 50;
                     }
-                    
+
                     // Section header with background
                     doc.rect(50, currentY, 500, 15)
-                       .fillColor(section.color)
-                       .fill();
-                       
+                        .fillColor(section.color)
+                        .fill();
+
                     doc.fontSize(10)
-                       .fillColor(section.textColor)
-                       .text(section.title, 60, currentY + 3, { underline: true });
+                        .fillColor(section.textColor)
+                        .text(section.title, 60, currentY + 3, { underline: true });
                     currentY += 20;
-                    
+
                     section.items.forEach(item => {
                         if (currentY > 750) {
                             doc.addPage();
                             currentY = 50;
                         }
                         doc.fontSize(9)
-                           .fillColor('#374151')
-                           .text(`• ${item}`, 65, currentY, { width: 470 });
+                            .fillColor('#374151')
+                            .text(`• ${item}`, 65, currentY, { width: 470 });
                         currentY = doc.y + 3;
                     });
-                    
+
                     currentY += 10;
                 });
-                
+
                 themeInfo.development_tips.forEach(tip => {
                     if (currentY > 700) {
                         doc.addPage();
@@ -836,91 +944,91 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
                     doc.text(`• ${tip}`, 50, currentY, { width: 486 });
                     currentY = doc.y + 3;
                 });
-                
+
                 currentY += 25;
             });
-            
+
             // Enhanced Strength Combinations Analysis with Visuals
             doc.addPage();
-            doc.fontSize(18)
-               .fillColor('#1e293b')
-               .text('Strength Combinations Analysis', 50, 50);
-            
+            doc.fontSize(20)
+                .fillColor('#1e293b')
+                .text('Strength Combinations Analysis', 50, 50);
+
             currentY = 80;
-            
+
             // Analyze top pairs from top 5
             processedData.top5Pairs.slice(0, 3).forEach((pair, index) => {
                 const comboAnalysis = getDetailedComboAnalysis(pair.themeA.name, pair.themeB.name);
-                
+
                 if (currentY > 550) {
                     doc.addPage();
                     currentY = 50;
                 }
-                
+
                 // Combination header with colored background
                 doc.rect(50, currentY, 500, 25)
-                   .fillColor('#f3f4f6')
-                   .stroke('#9ca3af');
-                
+                    .fillColor('#f3f4f6')
+                    .stroke('#9ca3af');
+
                 doc.fontSize(12)
-                   .fillColor('#1f2937')
-                   .text(`${index + 1}. ${comboAnalysis.name}`, 60, currentY + 5);
-                   
+                    .fillColor('#1f2937')
+                    .text(`${index + 1}. ${comboAnalysis.name}`, 60, currentY + 5);
+
                 doc.fontSize(10)
-                   .fillColor('#6b7280')
-                   .text(`${pair.themeA.name} + ${pair.themeB.name}`, 60, currentY + 17);
-                
+                    .fillColor('#6b7280')
+                    .text(`${pair.themeA.name} + ${pair.themeB.name}`, 60, currentY + 17);
+
                 currentY += 35;
-                
+
                 // Positive synergy section
                 doc.rect(50, currentY, 500, 15)
-                   .fillColor('#f0fdf4')
-                   .fill();
-                   
+                    .fillColor('#f0fdf4')
+                    .fill();
+
                 doc.fontSize(10)
-                   .fillColor('#166534')
-                   .text('Positive Synergy:', 60, currentY + 3, { underline: true });
+                    .fillColor('#166534')
+                    .text('Positive Synergy:', 60, currentY + 3, { underline: true });
                 currentY += 20;
-                
+
                 doc.fontSize(9)
-                   .fillColor('#374151')
-                   .text(comboAnalysis.positive_synergy, 60, currentY, { width: 480 });
+                    .fillColor('#374151')
+                    .text(comboAnalysis.positive_synergy, 60, currentY, { width: 480 });
                 currentY = doc.y + 10;
-                
+
                 // Potential risks section
                 doc.rect(50, currentY, 500, 15)
-                   .fillColor('#fef2f2')
-                   .fill();
-                   
+                    .fillColor('#fef2f2')
+                    .fill();
+
                 doc.fontSize(10)
-                   .fillColor('#991b1b')
-                   .text('Potential Risks:', 60, currentY + 3, { underline: true });
+                    .fillColor('#991b1b')
+                    .text('Potential Risks:', 60, currentY + 3, { underline: true });
                 currentY += 20;
-                
+
                 doc.fontSize(9)
-                   .fillColor('#374151')
-                   .text(comboAnalysis.risks, 60, currentY, { width: 480 });
+                    .fillColor('#374151')
+                    .text(comboAnalysis.risks, 60, currentY, { width: 480 });
                 currentY = doc.y + 15;
-                
+
                 currentY += 25;
             });
-            
+
             // Add a final summary page
             doc.addPage();
-            
+
             doc.fontSize(18)
-               .fillColor('#1e293b')
-               .text('Development Summary', 50, 50);
-            
+                .fillColor('#1e293b')
+                .text('Development Summary', 50, 50);
+
             // Summary box
             doc.rect(50, 90, 500, 200)
-               .fillColor('#f8fafc')
-               .stroke('#e2e8f0');
-               
+                .fillColor('#f8fafc')
+                .stroke('#e2e8f0');
+
             doc.fontSize(12)
-               .fillColor('#2563eb')
-               .text('Key Takeaways for Your Development Journey:', 60, 110);
-            
+                .fillColor('#2563eb')
+                .text('Key Takeaways for Your Development Journey:', 60, 110);
+
             const summaryPoints = [
                 `Your primary strength domain is ${processedData.domainScores.primary_talent_domain}, which represents your greatest natural talent area.`,
                 `Focus on developing your top 5 themes: ${processedData.top5.map(t => t.name).join(', ')}.`,
@@ -928,27 +1036,18 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
                 `Consider how your unique combination of talents can create value in your personal and professional life.`,
                 `Continue developing your strengths through intentional practice and application.`
             ];
-            
+
             let summaryY = 140;
             summaryPoints.forEach(point => {
                 doc.fontSize(10)
-                   .fillColor('#374151')
-                   .text(`• ${point}`, 65, summaryY, { width: 470 });
+                    .fillColor('#374151')
+                    .text(`• ${point}`, 65, summaryY, { width: 470 });
                 summaryY = doc.y + 8;
             });
-            
-            // Enhanced Footer
-            doc.fontSize(10)
-               .fillColor('#9ca3af')
-               .text('This report is generated by StrengthsFinder 360 Assessment Tool', 50, doc.page.height - 70, { align: 'center' });
-               
-            doc.fontSize(8)
-               .fillColor('#6b7280')
-               .text(`Generated on ${new Date().toLocaleDateString()} • Report ID: ${candidate.id}`, 50, doc.page.height - 50, { align: 'center' });
-            
+
             // Finalize PDF
             doc.end();
-            
+
         } catch (error) {
             console.error('Error generating comprehensive PDF:', error);
             reject(error);

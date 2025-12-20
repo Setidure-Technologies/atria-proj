@@ -89,7 +89,7 @@ router.post('/login', async (req, res) => {
  */
 router.post('/register', async (req, res) => {
     try {
-        const { token, password, name, phone } = req.body;
+        const { token, password, name, phone, email: customEmail } = req.body;
 
         if (!token || !password || !name) {
             return res.status(400).json({
@@ -107,8 +107,18 @@ router.post('/register', async (req, res) => {
             });
         }
 
+        // Determine the email to use
+        const userEmail = invitation.email === 'public-signup' ? customEmail : invitation.email;
+
+        if (!userEmail) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email is required for public signup',
+            });
+        }
+
         // Check if user already exists
-        const existingUser = await getUserByEmail(invitation.email);
+        const existingUser = await getUserByEmail(userEmail);
         if (existingUser) {
             return res.status(400).json({
                 success: false,
@@ -118,7 +128,7 @@ router.post('/register', async (req, res) => {
 
         // Create user
         const user = await createUser({
-            email: invitation.email,
+            email: userEmail,
             name,
             phone,
             password,
@@ -126,8 +136,10 @@ router.post('/register', async (req, res) => {
             termsAccepted: true,
         });
 
-        // Mark invitation as used
-        await markInvitationUsed(invitation.id, user.id);
+        // Mark invitation as used (only for non-public invitations)
+        if (invitation.email !== 'public-signup') {
+            await markInvitationUsed(invitation.id, user.id);
+        }
 
         // Generate token
         const authToken = generateToken(user);
@@ -384,35 +396,76 @@ const { generateOTP, verifyOTP } = require('../services/otpService');
 
 /**
  * POST /api/auth/send-otp
- * Send OTP to phone number
+ * Send OTP to user's email
  */
 router.post('/send-otp', async (req, res) => {
     try {
-        const { phone } = req.body;
-        if (!phone) {
-            return res.status(400).json({ success: false, error: 'Phone number is required' });
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email is required' });
         }
-        await generateOTP(phone);
-        res.json({ success: true, message: 'OTP sent successfully' });
+
+        const result = await generateOTP(email);
+        res.json(result);
     } catch (error) {
         console.error('Send OTP error:', error);
-        res.status(500).json({ success: false, error: 'Failed to send OTP' });
+        res.status(400).json({ success: false, error: error.message || 'Failed to send OTP' });
     }
 });
 
 /**
  * POST /api/auth/verify-otp
- * Verify OTP
+ * Verify email OTP and mark user as verified
  */
 router.post('/verify-otp', async (req, res) => {
     try {
-        const { phone, code } = req.body;
-        if (!phone || !code) {
-            return res.status(400).json({ success: false, error: 'Phone and code are required' });
+        const { email, code } = req.body;
+        if (!email || !code) {
+            return res.status(400).json({ success: false, error: 'Email and code are required' });
         }
-        const result = await verifyOTP(phone, code);
+
+        const result = await verifyOTP(email, code);
         if (result.success) {
-            res.json({ success: true, message: 'Phone verified successfully' });
+            // Auto-assign Strength360 test upon email verification
+            try {
+                const { createAssignment, pool } = require('../services/database');
+
+                // Find the user
+                const userResult = await pool.query(
+                    `SELECT id FROM users WHERE email = $1`,
+                    [email]
+                );
+
+                if (userResult.rows[0]) {
+                    const userId = userResult.rows[0].id;
+
+                    // Find Strength360 test
+                    const testResult = await pool.query(
+                        `SELECT id FROM tests WHERE type = 'psychometric' AND is_active = TRUE LIMIT 1`
+                    );
+
+                    if (testResult.rows[0]) {
+                        // Check if already assigned
+                        const existingAssignment = await pool.query(
+                            `SELECT id FROM assignments WHERE user_id = $1 AND test_id = $2`,
+                            [userId, testResult.rows[0].id]
+                        );
+
+                        if (existingAssignment.rows.length === 0) {
+                            await createAssignment({
+                                testId: testResult.rows[0].id,
+                                userId: userId,
+                                assignedBy: userId, // Self-assigned
+                            });
+                            console.log(`✅ Auto-assigned Strength360 to user: ${email}`);
+                        }
+                    }
+                }
+            } catch (assignError) {
+                console.error('Auto-assign error (non-fatal):', assignError);
+            }
+
+            res.json({ success: true, message: 'Email verified successfully' });
         } else {
             res.status(400).json({ success: false, error: result.error });
         }

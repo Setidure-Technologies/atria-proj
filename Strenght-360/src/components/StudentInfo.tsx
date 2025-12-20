@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import {
   User, Mail, Phone, MapPin, BookOpen, Award, GraduationCap,
-  Home, Calendar, School, Briefcase, DollarSign, Activity
+  Home, Calendar, School, Briefcase, IndianRupee, Activity
 } from 'lucide-react';
 
 // Types
@@ -638,13 +638,13 @@ export function StudentInfo({ onStart, initialData }: StudentInfoProps) {
                     Annual Income
                   </label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="text"
                       value={state.annualIncome}
                       onChange={(e) => setState(prev => ({ ...prev, annualIncome: e.target.value }))}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                      placeholder="Annual income"
+                      placeholder="Annual income (₹)"
                     />
                   </div>
                 </div>

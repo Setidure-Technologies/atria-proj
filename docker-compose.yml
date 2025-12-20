@@ -82,13 +82,14 @@ services:
       PORT: 4902
       DATABASE_URL: postgresql://atria_admin:atria_secure_2024@atria_postgres:5432/atria360
       REDIS_URL: redis://atria_redis:6379
-      SMTP_HOST: atria_mailhog
-      SMTP_PORT: 1025
-      SMTP_USER: ""
-      SMTP_PASS: ""
-      SMTP_FROM: "noreply@atria360.com"
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 465
+      SMTP_USER: "as97612@gmail.com"
+      SMTP_PASS: "iudppzdvhfqkakmf"
+      SMTP_FROM: "as97612@gmail.com"
+      SMTP_SECURE: "true"
       JWT_SECRET: "change_this_in_production_use_env_variable"
-      CORS_ORIGINS: "http://localhost:4901,http://localhost:4903"
+      CORS_ORIGINS: "*"
     ports:
       - "4902:4902"
     volumes:
@@ -114,11 +115,12 @@ services:
       context: ./Strenght-360
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: http://localhost:4902/api
+        VITE_API_URL: ""
+        VITE_BASE_PATH: "/candidate/"
     container_name: atria_frontend
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://localhost:4902/api
+      VITE_API_URL: ""
     ports:
       - "4901:80"
     depends_on:
@@ -132,11 +134,12 @@ services:
       context: ./Beyonders-360-main
       dockerfile: Dockerfile.admin
       args:
-        VITE_API_URL: http://localhost:4902
+        VITE_API_URL: ""
+        VITE_BASE_PATH: "/admin/"
     container_name: atria_admin
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://localhost:4902
+      VITE_API_URL: ""
     ports:
       - "4903:80"
     depends_on:
@@ -155,11 +158,12 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://atria_admin:atria_secure_2024@atria_postgres:5432/atria360
       REDIS_URL: redis://atria_redis:6379
-      SMTP_HOST: atria_mailhog
-      SMTP_PORT: 1025
-      SMTP_USER: ""
-      SMTP_PASS: ""
-      SMTP_FROM: "noreply@atria360.com"
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 465
+      SMTP_USER: "as97612@gmail.com"
+      SMTP_PASS: "iudppzdvhfqkakmf"
+      SMTP_FROM: "as97612@gmail.com"
+      SMTP_SECURE: "true"
     volumes:
       - ./Strenght-360/backend:/app
       - /app/node_modules

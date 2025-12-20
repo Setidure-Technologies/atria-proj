@@ -22,20 +22,20 @@ const redis = new Redis(REDIS_URL);
 
 // Email transporter
 const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: false,
-    auth: SMTP_USER && SMTP_PASS ? {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-    } : undefined,
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: SMTP_USER && SMTP_PASS ? {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  } : undefined,
 });
 
 // Email templates
 const EMAIL_TEMPLATES = {
-    test_assignment: ({ userName, testTitle, testLink, dueDate }) => ({
-        subject: `ATRIA 360: Your test "${testTitle}" is ready`,
-        html: `
+  test_assignment: ({ userName, testTitle, testLink, dueDate }) => ({
+    subject: `ATRIA 360: Your test "${testTitle}" is ready`,
+    html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -74,7 +74,7 @@ const EMAIL_TEMPLATES = {
       </body>
       </html>
     `,
-        text: `
+    text: `
 Dear ${userName},
 
 You have been assigned a new test: ${testTitle}
@@ -87,11 +87,11 @@ Important: This is a secure link. Do not share it with anyone.
 © 2024 ATRIA 360. All rights reserved.
 Powered by Peop360
     `,
-    }),
+  }),
 
-    invitation: ({ email, inviteLink, expiresAt }) => ({
-        subject: 'Welcome to ATRIA 360 - Complete Your Registration',
-        html: `
+  invitation: ({ email, inviteLink, expiresAt }) => ({
+    subject: 'Welcome to ATRIA 360 - Complete Your Registration',
+    html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -128,7 +128,7 @@ Powered by Peop360
       </body>
       </html>
     `,
-        text: `
+    text: `
 Welcome to ATRIA 360!
 
 You've been invited to join ATRIA 360 assessment platform.
@@ -140,13 +140,13 @@ Note: This invitation link expires on ${new Date(expiresAt).toLocaleString()}
 © 2024 ATRIA 360. All rights reserved.
 Powered by Peop360
     `,
-    }),
+  }),
 };
 
 // Process email queue
 async function processEmailQueue() {
-    try {
-        const result = await pool.query(`
+  try {
+    const result = await pool.query(`
       UPDATE email_queue
       SET status = 'processing'
       WHERE id = (
@@ -161,135 +161,135 @@ async function processEmailQueue() {
       RETURNING *
     `);
 
-        if (result.rows.length === 0) {
-            return null;
-        }
+    if (result.rows.length === 0) {
+      return null;
+    }
 
-        const email = result.rows[0];
-        console.log(`📧 Processing email: ${email.id} to ${email.to_email}`);
+    const email = result.rows[0];
+    console.log(`📧 Processing email: ${email.id} to ${email.to_email}`);
 
-        try {
-            // Generate email content from template if specified
-            let emailContent = {
-                subject: email.subject,
-                html: email.body_html,
-                text: email.body_text,
-            };
+    try {
+      // Generate email content from template if specified
+      let emailContent = {
+        subject: email.subject,
+        html: email.body_html,
+        text: email.body_text,
+      };
 
-            if (email.template_name && EMAIL_TEMPLATES[email.template_name]) {
-                const templateData = JSON.parse(email.template_data || '{}');
-                emailContent = EMAIL_TEMPLATES[email.template_name](templateData);
-            }
+      if (email.template_name && EMAIL_TEMPLATES[email.template_name]) {
+        const templateData = JSON.parse(email.template_data || '{}');
+        emailContent = EMAIL_TEMPLATES[email.template_name](templateData);
+      }
 
-            // Send email
-            await transporter.sendMail({
-                from: SMTP_FROM,
-                to: email.to_email,
-                subject: emailContent.subject,
-                html: emailContent.html,
-                text: emailContent.text,
-                attachments: [
-                    {
-                        filename: 'logo.jpeg',
-                        path: '/app/assets/peop360_logo_powered.jpeg',
-                        cid: 'logo', // same as in email template
-                    },
-                ],
-            });
+      // Send email
+      await transporter.sendMail({
+        from: SMTP_FROM,
+        to: email.to_email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+        text: emailContent.text,
+        attachments: [
+          {
+            filename: 'logo.jpeg',
+            path: '/app/assets/peop360_logo_powered.jpeg',
+            cid: 'logo', // same as in email template
+          },
+        ],
+      });
 
-            // Mark as sent
-            await pool.query(
-                'UPDATE email_queue SET status = $1, sent_at = NOW() WHERE id = $2',
-                ['sent', email.id]
-            );
+      // Mark as sent
+      await pool.query(
+        'UPDATE email_queue SET status = $1, sent_at = NOW() WHERE id = $2',
+        ['sent', email.id]
+      );
 
-            console.log(`✅ Email sent successfully: ${email.id}`);
-            return true;
-        } catch (error) {
-            console.error(`❌ Error sending email ${email.id}:`, error);
+      console.log(`✅ Email sent successfully: ${email.id}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Error sending email ${email.id}:`, error);
 
-            // Update failure
-            await pool.query(
-                `UPDATE email_queue 
+      // Update failure
+      await pool.query(
+        `UPDATE email_queue 
          SET status = $1, 
              attempts = attempts + 1, 
              last_error = $2
          WHERE id = $3`,
-                [
-                    email.attempts + 1 >= email.max_attempts ? 'failed' : 'pending',
-                    error.message,
-                    email.id,
-                ]
-            );
+        [
+          email.attempts + 1 >= email.max_attempts ? 'failed' : 'pending',
+          error.message,
+          email.id,
+        ]
+      );
 
-            return false;
-        }
-    } catch (error) {
-        console.error('Error in processEmailQueue:', error);
-        return null;
+      return false;
     }
+  } catch (error) {
+    console.error('Error in processEmailQueue:', error);
+    return null;
+  }
 }
 
 // Main worker loop
 async function startWorker() {
-    console.log('🚀 ATRIA 360 Worker started');
-    console.log(`📧 SMTP: ${SMTP_HOST}:${SMTP_PORT}`);
-    console.log(`💾 Database: Connected`);
-    console.log(`🔴 Redis: Connected`);
+  console.log('🚀 ATRIA 360 Worker started');
+  console.log(`📧 SMTP: ${SMTP_HOST}:${SMTP_PORT}`);
+  console.log(`💾 Database: Connected`);
+  console.log(`🔴 Redis: Connected`);
 
-    // Process queue every 5 seconds
-    setInterval(async () => {
-        const processed = await processEmailQueue();
-        if (processed === null) {
-            // No emails to process
-        }
-    }, 5000);
+  // Process queue every 5 seconds
+  setInterval(async () => {
+    const processed = await processEmailQueue();
+    if (processed === null) {
+      // No emails to process
+    }
+  }, 5000);
 
-    // Also listen to Redis pub/sub for immediate processing
-    redis.subscribe('email:new', (err) => {
-        if (err) {
-            console.error('Failed to subscribe to Redis channel:', err);
-        } else {
-            console.log('Subscribed to email:new channel');
-        }
-    });
+  // Also listen to Redis pub/sub for immediate processing
+  redis.subscribe('email:new', (err) => {
+    if (err) {
+      console.error('Failed to subscribe to Redis channel:', err);
+    } else {
+      console.log('Subscribed to email:new channel');
+    }
+  });
 
-    redis.on('message', async (channel, message) => {
-        if (channel === 'email:new') {
-            console.log('📨 New email notification received');
-            await processEmailQueue();
-        }
-    });
+  redis.on('message', async (channel, message) => {
+    if (channel === 'email:new') {
+      console.log('📨 New email notification received');
+      await processEmailQueue();
+    }
+  });
 
-    // Cleanup old sent emails (keep for 30 days)
-    setInterval(async () => {
-        try {
-            await pool.query(
-                "DELETE FROM email_queue WHERE status = 'sent' AND sent_at < NOW() - INTERVAL '30 days'"
-            );
-        } catch (error) {
-            console.error('Error cleaning up old emails:', error);
-        }
-    }, 24 * 60 * 60 * 1000); // Once per day
+  // Cleanup old sent emails (keep for 30 days)
+  setInterval(async () => {
+    try {
+      await pool.query(
+        "DELETE FROM email_queue WHERE status = 'sent' AND sent_at < NOW() - INTERVAL '30 days'"
+      );
+    } catch (error) {
+      console.error('Error cleaning up old emails:', error);
+    }
+  }, 24 * 60 * 60 * 1000); // Once per day
 
-    // Handle graceful shutdown
-    process.on('SIGTERM', async () => {
-        console.log('Received SIGTERM, shutting down gracefully...');
-        await pool.end();
-        redis.disconnect();
-        process.exit(0);
-    });
+  // Handle graceful shutdown
+  process.on('SIGTERM', async () => {
+    console.log('Received SIGTERM, shutting down gracefully...');
+    await pool.end();
+    redis.disconnect();
+    process.exit(0);
+  });
 
-    process.on('SIGINT', async () => {
-        console.log('Received SIGINT, shutting down gracefully...');
-        await pool.end();
-        redis.disconnect();
-        process.exit(0);
-    });
+  process.on('SIGINT', async () => {
+    console.log('Received SIGINT, shutting down gracefully...');
+    await pool.end();
+    redis.disconnect();
+    process.exit(0);
+  });
 }
 
 // Start the worker
 startWorker().catch((error) => {
-    console.error('Fatal error in worker:', error);
-    process.exit(1);
+  console.error('Fatal error in worker:', error);
+  process.exit(1);
 });

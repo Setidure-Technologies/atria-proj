@@ -1,3 +1,51 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Atria University Theme Variables */
+:root {
+  /* Primary - Atria Blue (from logo) */
+  --atria-primary: #3B4DC9;
+  --atria-primary-dark: #2E3DA1;
+  --atria-primary-light: #5B6BD9;
+  
+  /* Accent - Atria Green (from logo) */
+  --atria-accent: #00C853;
+  --atria-accent-light: #69F0AE;
+  
+  /* Neutrals */
+  --atria-bg: #F8FAFC;
+  --atria-card: #FFFFFF;
+  --atria-text: #1E293B;
+  --atria-text-muted: #64748B;
+  --atria-border: #E2E8F0;
+}
+
+/* Base body styling */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--atria-bg);
+}
+
+/* Custom Atria button styles */
+.btn-atria-primary {
+  @apply bg-[#3B4DC9] hover:bg-[#2E3DA1] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+}
+
+.btn-atria-accent {
+  @apply bg-[#00C853] hover:bg-[#00B548] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200;
+}
+
+/* Card styling */
+.card-atria {
+  @apply bg-white rounded-2xl shadow-xl p-8;
+}
+
+/* Input styling */
+.input-atria {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B4DC9] focus:border-transparent outline-none transition-all;
+}

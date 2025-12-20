@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Power, PowerOff } from 'lucide-react';
 
-const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:4902';
+const API_URL = (import.meta as any).env.VITE_API_URL || '';
 
 interface Test {
     id: string;

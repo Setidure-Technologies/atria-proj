@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiDB } from './lib/apiDatabase';
 import { MapPin } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4902';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -103,23 +103,31 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Sign in to your account
+                {/* Atria Logo and Header */}
+                <div className="text-center">
+                    <div className="flex justify-center mb-6">
+                        <img
+                            src="/candidate/atria-logo.jpg"
+                            alt="Atria University"
+                            className="h-16 md:h-20 w-auto"
+                        />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                        Student Login
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-gray-600">
                         Access your assigned assessments
                     </p>
                 </div>
 
                 {/* Location Status Indicator */}
                 <div className={`flex items-center justify-center gap-2 text-sm py-2 px-4 rounded-lg ${locationStatus === 'granted'
-                        ? 'bg-green-100 text-green-800'
-                        : locationStatus === 'denied'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-600'
+                    ? 'bg-green-100 text-green-800'
+                    : locationStatus === 'denied'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-600'
                     }`}>
                     <MapPin size={16} />
                     {locationStatus === 'granted' && (
@@ -182,7 +190,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#3B4DC9] hover:bg-[#2E3DA1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4DC9] disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
                         >
                             {loading ? 'Signing in...' : 'Sign in'}
                         </button>

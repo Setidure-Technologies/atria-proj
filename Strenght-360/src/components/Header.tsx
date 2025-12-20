@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
+const BASE_PATH = import.meta.env.VITE_BASE_PATH || '/';
 const CANDIDATE_NAMES = [
-  '/atria-logo.jpeg',
-  '/atria-logo.jpg',
-  '/atria-logo.png',
-  '/atria-logo.svg',
-  '/atria_logo.png',
-];
+  'atria-logo.jpeg',
+  'atria-logo.jpg',
+  'atria-logo.png',
+  'atria-logo.svg',
+  'atria_logo.png',
+].map(name => BASE_PATH + name);
 
 export function Header() {
   const [logo, setLogo] = useState<string | null>(null);

@@ -27,17 +27,29 @@ const PORT = process.env.PORT || 4902;
 
 app.use(
     cors({
-        origin: [
-            'http://localhost:5173',
-            'http://localhost:5174',
-            'http://localhost:5175',
-            'http://localhost:4901', // Candidate app
-            'http://localhost:4903', // Admin portal
-            'https://atria.peop360.com', // Production domain
-            'https://candidate.atria.peop360.com',
-            'https://admin.atria.peop360.com',
-            process.env.CORS_ORIGINS,
-        ].filter(Boolean),
+        origin: (origin, callback) => {
+            const allowedOrigins = [
+                'http://localhost:5173',
+                'http://localhost:5174',
+                'http://localhost:5175',
+                'http://localhost:4901',
+                'http://localhost:4903',
+                'https://atria.peop360.com',
+                'https://candidate.atria.peop360.com',
+                'https://admin.atria.peop360.com',
+            ];
+
+            const envOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [];
+            const allAllowed = [...allowedOrigins, ...envOrigins];
+
+            // Allow if no origin (like mobile apps or curl) or if in allowed list
+            if (!origin || allAllowed.includes(origin) || allAllowed.includes('*')) {
+                callback(null, true);
+            } else {
+                console.warn(`🚫 CORS blocked for origin: ${origin}`);
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
         credentials: true,

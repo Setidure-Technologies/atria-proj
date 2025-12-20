@@ -4,7 +4,7 @@ import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/candidate/',
+  base: process.env.VITE_BASE_PATH || '/',
   plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],

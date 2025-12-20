@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 
-const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:4902';
+const API_URL = (import.meta as any).env.VITE_API_URL || '';
 
 interface Assignment {
     id: string;

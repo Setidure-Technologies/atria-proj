@@ -147,12 +147,33 @@ export default function AdaptiveTestRunner({
                     <h2 className="text-xl text-blue-600 mb-6">{stream === 'SCIENCE' ? 'Science & Technology' : 'Non-Science'} Stream</h2>
 
                     <div className="space-y-4 text-left bg-blue-50 p-6 rounded-xl mb-8">
-                        <p className="font-medium">This assessment consists of two parts:</p>
-                        <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                            <li><strong>Part 1:</strong> 30 Multiple Choice Questions (Domain & Behavioral)</li>
-                            <li><strong>Part 2:</strong> Thematic Apperception Test (Story Writing)</li>
-                        </ul>
-                        <p className="text-sm text-gray-500 mt-4">Please ensure you have a stable internet connection and about 45 minutes of uninterrupted time.</p>
+                        <p className="font-medium text-blue-900">This assessment identifies your natural strengths and behavioral tendencies across 4 key domains:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <div className="bg-white p-3 rounded-lg border border-blue-100">
+                                <h4 className="font-bold text-blue-800 text-sm">Executing</h4>
+                                <p className="text-xs text-gray-600">How you make things happen and turn ideas into reality.</p>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-blue-100">
+                                <h4 className="font-bold text-blue-800 text-sm">Influencing</h4>
+                                <p className="text-xs text-gray-600">How you take charge, speak up, and make sure others are heard.</p>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-blue-100">
+                                <h4 className="font-bold text-blue-800 text-sm">Relationship Building</h4>
+                                <p className="text-xs text-gray-600">How you build and nurture strong connections with others.</p>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-blue-100">
+                                <h4 className="font-bold text-blue-800 text-sm">Strategic Thinking</h4>
+                                <p className="text-xs text-gray-600">How you absorb and analyze information to make better decisions.</p>
+                            </div>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-blue-100">
+                            <p className="font-medium">The assessment consists of two parts:</p>
+                            <ul className="list-disc pl-5 space-y-2 text-gray-700 mt-2">
+                                <li><strong>Part 1:</strong> 30 Multiple Choice Questions (Domain & Behavioral)</li>
+                                <li><strong>Part 2:</strong> Thematic Apperception Test (Story Writing)</li>
+                            </ul>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-4 italic">Please ensure you have a stable internet connection and about 45 minutes of uninterrupted time.</p>
                     </div>
 
                     <button

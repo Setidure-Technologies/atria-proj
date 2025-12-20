@@ -7,23 +7,18 @@ import { TestCompletion } from './components/TestCompletion.tsx'
 import './index.css'
 
 function App() {
-  const pathname = window.location.pathname;
-  const isTestRoute = pathname.startsWith('/admin/test/') || pathname.startsWith('/test/');
-  const isCompletionRoute = pathname === '/admin/test-completed' || pathname === '/test-completed';
-
-  if (isTestRoute || isCompletionRoute) {
-    return (
-      <Router basename="/admin">
-        <Routes>
-          <Route path="/test/:assignmentId" element={<BeyondersTestComponent />} />
-          <Route path="/test-completed" element={<TestCompletion />} />
-        </Routes>
-      </Router>
-    );
-  }
-
-  // Default to admin interface
-  return <AdminApp />;
+  const basePath = import.meta.env.VITE_BASE_PATH || '/';
+  return (
+    <Router basename={basePath}>
+      <Routes>
+        <Route path="/admin/test/:assignmentId" element={<BeyondersTestComponent />} />
+        <Route path="/test/:assignmentId" element={<BeyondersTestComponent />} />
+        <Route path="/admin/test-completed" element={<TestCompletion />} />
+        <Route path="/test-completed" element={<TestCompletion />} />
+        <Route path="/*" element={<AdminApp />} />
+      </Routes>
+    </Router>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

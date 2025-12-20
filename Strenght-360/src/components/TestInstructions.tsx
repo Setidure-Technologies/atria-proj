@@ -38,9 +38,29 @@ export function TestInstructions({ onStart, studentName, totalQuestions }: TestI
                 <CheckCircle2 className="text-green-600 mt-1" size={24} />
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Assessment Details</h3>
-                  <p className="text-gray-700 mb-3">
-                    This assessment identifies your natural strengths, learning preferences, and behavioural tendencies, intended to help you understand yourself better so you can make informed choices about your future pathways.
+                  <p className="text-gray-700 mb-4">
+                    This assessment identifies your natural strengths across 4 key domains. Understanding these helps you make informed choices about your future pathways:
                   </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white p-3 rounded-lg border border-green-100">
+                      <h4 className="font-bold text-green-800 text-sm">Executing</h4>
+                      <p className="text-xs text-gray-600">How you make things happen and turn ideas into reality.</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-green-100">
+                      <h4 className="font-bold text-green-800 text-sm">Influencing</h4>
+                      <p className="text-xs text-gray-600">How you take charge, speak up, and make sure others are heard.</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-green-100">
+                      <h4 className="font-bold text-green-800 text-sm">Relationship Building</h4>
+                      <p className="text-xs text-gray-600">How you build and nurture strong connections with others.</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-green-100">
+                      <h4 className="font-bold text-green-800 text-sm">Strategic Thinking</h4>
+                      <p className="text-xs text-gray-600">How you absorb and analyze information to make better decisions.</p>
+                    </div>
+                  </div>
+
                   <div className="mb-3">
                     <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-md p-3">
                       <AlertCircle className="text-yellow-600 mt-1" size={20} />
@@ -103,7 +123,7 @@ export function TestInstructions({ onStart, studentName, totalQuestions }: TestI
                 className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
               />
               <label htmlFor="accept-terms" className="text-gray-700">
-                I have read and understood the instructions above. I agree to complete this assessment 
+                I have read and understood the instructions above. I agree to complete this assessment
                 honestly and without external assistance.
               </label>
             </div>
@@ -112,11 +132,10 @@ export function TestInstructions({ onStart, studentName, totalQuestions }: TestI
               <button
                 onClick={onStart}
                 disabled={!hasAccepted}
-                className={`px-8 py-3 rounded-lg font-semibold text-lg transition-colors ${
-                  hasAccepted
+                className={`px-8 py-3 rounded-lg font-semibold text-lg transition-colors ${hasAccepted
                     ? 'bg-orange-600 text-white hover:bg-orange-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Start Assessment (20 Minutes)
               </button>

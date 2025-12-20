@@ -12,7 +12,7 @@ The platform consists of 6 Docker containers:
 4. **atria_worker** (No public port): Background worker for emails and jobs
 5. **atria_admin** (Port 4903): Admin Portal (React + Nginx)
 6. **atria_frontend** (Port 4901): Candidate Application (React + Nginx)
-
+http://localhost:4901/login
 *Dev Tools:*
 - **atria_pgadmin** (Port 4905): Database management UI
 - **atria_mailhog** (Port 4908): Email testing tool (captures emails)

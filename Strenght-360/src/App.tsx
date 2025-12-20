@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useParams, useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import TestRunner from './TestRunner';
-import AdaptiveTestRunner from './AdaptiveTestRunner';
 import Login from './Login';
-import Dashboard from './Dashboard';
+import Signup from './Signup';
 import CandidateGate from './components/CandidateGate';
 import { apiDB } from './lib/apiDatabase';
-import BeyondersTestRunner from './BeyondersTestRunner';
 import Profile from './Profile';
 
 function TestDispatcher() {
@@ -93,45 +91,18 @@ function TestDispatcher() {
   // Determine which runner to use based on test type/slug
   const slug = testType?.toLowerCase();
 
+  // Only support Strength360/psychometric tests (Beyonders removed)
   if (slug === 'strength-360' || slug === 'strength360' || slug === 'psychometric') {
     return (
       <TestRunner
         assignmentId={assignmentId}
-        token={activeToken}
-        testConfig={testConfig}
-        studentName={studentInfo?.name}
-        studentEmail={studentInfo?.email}
+        token={activeToken || undefined}
       />
     );
   }
 
-  if (slug === 'beyonders' || slug === 'beyonders_science' || slug === 'beyonders_non_science' || slug === 'adaptive') {
-    return (
-      <BeyondersTestRunner
-        assignmentId={assignmentId}
-        token={activeToken}
-        testConfig={testConfig}
-        studentName={studentInfo?.name}
-        studentEmail={studentInfo?.email}
-      />
-    );
-  }
-
-  // Fallback for legacy 'adaptive' type if not caught above
-  if (slug === 'adaptive') {
-    return (
-      <AdaptiveTestRunner
-        assignmentId={assignmentId}
-        token={activeToken}
-        testConfig={testConfig}
-        studentName={studentInfo?.name}
-        studentEmail={studentInfo?.email}
-      />
-    );
-  }
-
-  // Unknown test type - show error instead of silent fallback
-  console.error('❌ Unknown test slug:', slug);
+  // Unknown test type - show error
+  console.error('❌ Unknown or unsupported test slug:', slug);
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-md">
@@ -163,6 +134,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route
         path="/dashboard"
         element={

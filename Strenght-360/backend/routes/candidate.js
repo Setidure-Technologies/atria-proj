@@ -407,5 +407,47 @@ router.post('/test/:assignmentId/submit-adaptive', requireCandidate, async (req,
     }
 });
 
+// ============================================
+// CANDIDATE STATUS & VERIFICATION GATES
+// ============================================
+
+/**
+ * GET /api/candidate/status
+ * Get candidate's verification status (email verified, profile completed)
+ */
+router.get('/status', requireAuth, requireCandidate, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT email_verified, profile_completed FROM users WHERE id = $1`,
+            [req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        const user = result.rows[0];
+        const canTakeTests = user.email_verified === true && user.profile_completed === true;
+
+        res.json({
+            success: true,
+            status: {
+                emailVerified: user.email_verified === true,
+                profileCompleted: user.profile_completed === true,
+                canTakeTests,
+            }
+        });
+    } catch (error) {
+        console.error('Get candidate status error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get status'
+        });
+    }
+});
+
 module.exports = router;
 

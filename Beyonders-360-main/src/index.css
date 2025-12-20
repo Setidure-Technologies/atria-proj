@@ -2,16 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Atria University Admin Theme Variables */
+:root {
+  /* Admin uses Orange theme for differentiation */
+  --admin-primary: #EA580C;
+  --admin-primary-dark: #C2410C;
+  --admin-primary-light: #FB923C;
+
+  /* Neutrals */
+  --atria-bg: #F8FAFC;
+  --atria-card: #FFFFFF;
+  --atria-text: #1E293B;
+  --atria-text-muted: #64748B;
+  --atria-border: #E2E8F0;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--atria-bg);
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Custom Admin button styles */
+.btn-admin-primary {
+  @apply bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+}
+
+/* Card styling */
+.card-admin {
+  @apply bg-white rounded-2xl shadow-xl p-8;
+}
+
+/* Input styling */
+.input-admin {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all;
 }

@@ -23,7 +23,8 @@ class ApiDatabase {
 
   constructor() {
     // Use environment variable, with fallback for development
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4902/api';
+    const apiBase = import.meta.env.VITE_API_URL || '';
+    this.baseUrl = apiBase ? `${apiBase}/api` : '/api';
   }
 
   private async fetchApi(endpoint: string, options: RequestInit = {}) {
@@ -376,6 +377,39 @@ class ApiDatabase {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  async getCandidateStatus() {
+    try {
+      return await this.fetchApi('/candidate/status');
+    } catch (error) {
+      console.error('Failed to get candidate status:', error);
+      return { success: false, error: 'Failed to get status' };
+    }
+  }
+
+  async sendOTP(email: string) {
+    try {
+      return await this.fetchApi('/auth/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    } catch (error) {
+      console.error('Failed to send OTP:', error);
+      return { success: false, error: 'Failed to send verification code' };
+    }
+  }
+
+  async verifyOTP(email: string, code: string) {
+    try {
+      return await this.fetchApi('/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, code }),
+      });
+    } catch (error) {
+      console.error('Failed to verify OTP:', error);
+      return { success: false, error: 'Failed to verify code' };
+    }
   }
 }
 

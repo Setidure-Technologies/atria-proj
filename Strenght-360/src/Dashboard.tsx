@@ -57,11 +57,6 @@ export default function Dashboard() {
         navigate(`/test/${assignmentId}`);
     };
 
-    const viewReport = (assignmentId: string) => {
-        // Navigate to results page (to be implemented)
-        navigate(`/results/${assignmentId}`);
-    };
-
     const handleLogout = () => {
         localStorage.removeItem('candidate_token');
         localStorage.removeItem('candidate_user');
@@ -83,30 +78,36 @@ export default function Dashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B4DC9]"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <nav className="bg-white shadow-sm">
+        <div className="min-h-screen bg-slate-50">
+            {/* Atria Header */}
+            <nav className="bg-white shadow-md border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex items-center">
-                            <h1 className="text-xl font-bold text-gray-900">Candidate Portal</h1>
-                        </div>
+                    <div className="flex justify-between h-16 items-center">
                         <div className="flex items-center gap-4">
+                            <img
+                                src="/candidate/atria-logo.jpg"
+                                alt="Atria University"
+                                className="h-10 md:h-12 w-auto"
+                            />
+                            <span className="hidden sm:inline text-lg font-semibold text-slate-700">Student Portal</span>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-4">
                             <button
                                 onClick={() => navigate('/profile')}
-                                className="text-gray-600 hover:text-gray-900 font-medium"
+                                className="px-3 py-2 text-sm text-slate-600 hover:text-[#3B4DC9] hover:bg-slate-100 rounded-lg font-medium transition-all"
                             >
                                 Profile
                             </button>
                             <button
                                 onClick={handleLogout}
-                                className="text-gray-600 hover:text-gray-900 font-medium"
+                                className="px-3 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg font-medium transition-all"
                             >
                                 Logout
                             </button>
@@ -166,12 +167,9 @@ export default function Dashboard() {
                                     </div>
                                     <div className="px-4 py-4 sm:px-6">
                                         {assignment.status === 'submitted' ? (
-                                            <button
-                                                onClick={() => viewReport(assignment.id)}
-                                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                            >
-                                                View Report
-                                            </button>
+                                            <div className="w-full flex justify-center py-2 px-4 border border-green-200 rounded-md bg-green-50 text-sm font-medium text-green-700">
+                                                ✓ Assessment Completed
+                                            </div>
                                         ) : (
                                             <button
                                                 onClick={() => startTest(assignment.id)}
