@@ -14,6 +14,7 @@ const {
     getResponseByAssignmentId,
     listResponses,
     updateUser,
+    queueEmail,
     pool,
 } = require('../services/database');
 const { requireAuth, requireCandidate, optionalAuth } = require('../middleware/auth');
@@ -291,6 +292,25 @@ router.post('/test/:assignmentId/submit', optionalAuth, async (req, res) => {
             client.release();
 
             console.log(`✅ Test submitted successfully: Response ID ${response.id}`);
+
+            // Queue completion email
+            try {
+                const userResult = await client.query('SELECT name, email FROM users WHERE id = $1', [assignment.user_id]);
+                const user = userResult.rows[0];
+
+                if (user) {
+                    await queueEmail({
+                        toEmail: user.email,
+                        subject: 'Test Completed Successfully - Atria University',
+                        templateName: 'test_completion',
+                        templateData: { studentName: user.name },
+                    });
+                    console.log(`📧 Queued completion email for ${user.email}`);
+                }
+            } catch (emailError) {
+                console.error('Failed to queue completion email:', emailError);
+                // Don't fail the request if email fails
+            }
 
             res.json({
                 success: true,

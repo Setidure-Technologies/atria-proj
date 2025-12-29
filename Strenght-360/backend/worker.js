@@ -141,6 +141,52 @@ Note: This invitation link expires on ${new Date(expiresAt).toLocaleString()}
 Powered by Peop360
     `,
   }),
+
+  test_completion: ({ studentName }) => ({
+    subject: 'Test Completed Successfully - Atria University',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #ffffff; padding: 20px; text-align: center; border-bottom: 2px solid #EA580C; }
+          .content { background: #ffffff; padding: 30px; }
+          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; }
+          .logo { width: 150px; height: auto; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <img src="cid:logo" alt="Atria University" class="logo" />
+          </div>
+          <div class="content">
+            <p>Dear ${studentName},</p>
+            <p>Congratulations! You have successfully completed the Strength Analysis Test.</p>
+            <p>We have received your responses and they are being processed. You don't need to take any further action at this moment.</p>
+            <p>Best regards,<br>Admissions Team<br>Atria University</p>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} Atria University. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+Dear ${studentName},
+
+Congratulations! You have successfully completed the Strength Analysis Test.
+
+We have received your responses and they are being processed. You don't need to take any further action at this moment.
+
+Best regards,
+Admissions Team
+Atria University
+    `,
+  }),
 };
 
 // Process email queue
@@ -177,7 +223,9 @@ async function processEmailQueue() {
       };
 
       if (email.template_name && EMAIL_TEMPLATES[email.template_name]) {
-        const templateData = JSON.parse(email.template_data || '{}');
+        const templateData = typeof email.template_data === 'string'
+          ? JSON.parse(email.template_data || '{}')
+          : (email.template_data || {});
         emailContent = EMAIL_TEMPLATES[email.template_name](templateData);
       }
 

@@ -25,6 +25,7 @@ const {
     logAuditAction,
     getDashboardStats,
     getResponseById,
+    resetUserProgress,
 } = require('../services/database');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
@@ -323,13 +324,20 @@ router.post('/users/bulk', async (req, res) => {
  */
 router.get('/users', async (req, res) => {
     try {
-        const { page, limit, status, role } = req.query;
+        const { page = 1, limit = 50, status, role } = req.query;
+
+        // Filter out SUPER_ADMIN unless requester is SUPER_ADMIN
+        const excludeRoles = [];
+        if (!req.user.roles.includes('SUPER_ADMIN')) {
+            excludeRoles.push('SUPER_ADMIN');
+        }
 
         const result = await listUsers({
-            page: page ? parseInt(page) : 1,
-            limit: limit ? parseInt(limit) : 50,
+            page: parseInt(page),
+            limit: parseInt(limit),
             status,
             role,
+            excludeRoles,
         });
 
         res.json({
@@ -1187,6 +1195,23 @@ router.delete('/users/:id', async (req, res) => {
     const client = await require('../services/database').pool.connect();
 
     try {
+        // Check if target user is an admin or super admin
+        const targetUser = await getUserById(id);
+        if (targetUser) {
+            // Check roles of target user (need to fetch roles if not in targetUser object, but getUserById usually returns basic info)
+            // Let's fetch with roles to be sure
+            const targetUserWithRoles = await require('../services/database').getUserWithRoles(id);
+            const targetRoles = targetUserWithRoles?.roles || [];
+
+            if (targetRoles.includes('SUPER_ADMIN')) {
+                return res.status(403).json({ success: false, error: 'Cannot delete Super Admin' });
+            }
+
+            if (targetRoles.includes('ADMIN') && !req.user.roles.includes('SUPER_ADMIN')) {
+                return res.status(403).json({ success: false, error: 'Only Super Admin can delete other Admins' });
+            }
+        }
+
         await client.query('BEGIN');
 
         // 1. Handle audit logs
@@ -1236,6 +1261,39 @@ router.delete('/users/:id', async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to delete user' });
     } finally {
         client.release();
+    }
+});
+
+
+
+/**
+ * POST /api/admin/users/:id/reset
+ * Reset user progress (clear responses and assignments)
+ */
+router.post('/users/:id/reset', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Optional: Check if target is admin/super admin and prevent reset if needed
+        // For now, allowing reset for any user as requested
+
+        await resetUserProgress(id);
+
+        // Log audit
+        await logAuditAction({
+            userId: req.user.id,
+            action: 'user_reset',
+            entityType: 'user',
+            entityId: id,
+            details: { reason: 'Manual reset by admin' },
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+        });
+
+        res.json({ success: true, message: 'User progress reset successfully' });
+    } catch (error) {
+        console.error('Reset user error:', error);
+        res.status(500).json({ success: false, error: 'Failed to reset user progress' });
     }
 });
 

@@ -83,11 +83,11 @@ services:
       DATABASE_URL: postgresql://atria_admin:atria_secure_2024@atria_postgres:5432/atria360
       REDIS_URL: redis://atria_redis:6379
       SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: 465
-      SMTP_USER: "as97612@gmail.com"
-      SMTP_PASS: "iudppzdvhfqkakmf"
-      SMTP_FROM: "as97612@gmail.com"
-      SMTP_SECURE: "true"
+      SMTP_PORT: 587
+      SMTP_USER: "uncapped@atriauniversity.edu.in"
+      SMTP_PASS: "gbfw aaud sciu qkpx"
+      SMTP_FROM: "uncapped@atriauniversity.edu.in"
+      SMTP_SECURE: "false"
       JWT_SECRET: "change_this_in_production_use_env_variable"
       CORS_ORIGINS: "*"
     ports:
@@ -159,11 +159,11 @@ services:
       DATABASE_URL: postgresql://atria_admin:atria_secure_2024@atria_postgres:5432/atria360
       REDIS_URL: redis://atria_redis:6379
       SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: 465
-      SMTP_USER: "as97612@gmail.com"
-      SMTP_PASS: "iudppzdvhfqkakmf"
-      SMTP_FROM: "as97612@gmail.com"
-      SMTP_SECURE: "true"
+      SMTP_PORT: 587
+      SMTP_USER: "uncapped@atriauniversity.edu.in"
+      SMTP_PASS: "gbfw aaud sciu qkpx"
+      SMTP_FROM: "uncapped@atriauniversity.edu.in"
+      SMTP_SECURE: "false"
     volumes:
       - ./Strenght-360/backend:/app
       - /app/node_modules

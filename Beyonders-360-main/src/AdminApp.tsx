@@ -310,9 +310,6 @@ function LoginPage({ onLogin }: { onLogin: (email: string, password: string) => 
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-gray-600">
-                    <p>Default credentials: admin@atria360.com / Admin@123</p>
-                </div>
             </div>
         </div>
     );

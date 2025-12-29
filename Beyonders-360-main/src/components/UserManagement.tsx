@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Upload, Search, Edit2, Ban, CheckCircle, Mail, Key, Trash2 } from 'lucide-react';
+import { UserPlus, Upload, Search, Edit2, Ban, CheckCircle, Mail, Key, Trash2, RotateCcw } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -43,6 +43,29 @@ export function UserManagement({ token }: UserManagementProps) {
             console.error('Failed to fetch users:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResetUser = async (userId: string, userName: string) => {
+        if (!window.confirm(`Are you sure you want to reset progress for user "${userName}"? This will delete all their responses and assignments.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/admin/users/${userId}/reset`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('User progress reset successfully');
+                fetchUsers();
+            } else {
+                alert(data.error || 'Failed to reset user progress');
+            }
+        } catch (error) {
+            console.error('Failed to reset user:', error);
+            alert('Failed to reset user progress');
         }
     };
 
@@ -174,6 +197,13 @@ export function UserManagement({ token }: UserManagementProps) {
                                                 title="Reset Password"
                                             >
                                                 <Key size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleResetUser(user.id, user.name)}
+                                                className="text-purple-600 hover:text-purple-900 mr-3"
+                                                title="Reset Progress"
+                                            >
+                                                <RotateCcw size={16} />
                                             </button>
                                             <button className="text-orange-600 hover:text-orange-900 mr-3">
                                                 <Edit2 size={16} />

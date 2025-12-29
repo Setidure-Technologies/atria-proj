@@ -104,7 +104,7 @@ function requireAdmin(req, res, next) {
         });
     }
 
-    if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
+    if (!req.user.roles || (!req.user.roles.includes('ADMIN') && !req.user.roles.includes('SUPER_ADMIN'))) {
         return res.status(403).json({
             success: false,
             error: 'Admin access required',

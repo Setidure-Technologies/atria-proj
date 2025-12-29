@@ -199,7 +199,7 @@ async function updateUser(userId, updates) {
 /**
  * List all users with pagination
  */
-async function listUsers({ page = 1, limit = 50, status = null, role = null }) {
+async function listUsers({ page = 1, limit = 50, status = null, role = null, excludeRoles = [] }) {
     const offset = (page - 1) * limit;
 
     let query = `
@@ -223,6 +223,12 @@ async function listUsers({ page = 1, limit = 50, status = null, role = null }) {
         conditions.push(`r.name = $${paramCount}`);
         params.push(role);
         paramCount++;
+    }
+
+    if (excludeRoles && excludeRoles.length > 0) {
+        conditions.push(`r.name NOT IN (${excludeRoles.map((_, i) => `$${paramCount + i}`).join(', ')}) OR r.name IS NULL`);
+        params.push(...excludeRoles);
+        paramCount += excludeRoles.length;
     }
 
     if (conditions.length > 0) {
@@ -881,8 +887,40 @@ module.exports = {
     getAuditLogs,
     // Statistics
     getDashboardStats,
+    resetUserProgress,
     // Password Reset
     createPasswordResetToken: createInvitation, // Reuse invitation logic
     verifyPasswordResetToken: getInvitationByToken, // Reuse invitation logic
 };
 // No Groq API keys or secrets are present in this file. No changes needed.
+
+/**
+ * Reset user progress
+ * Clears all responses, assignments, and resets status
+ */
+async function resetUserProgress(userId) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete responses
+        await client.query(`
+            DELETE FROM responses 
+            WHERE assignment_id IN (SELECT id FROM assignments WHERE user_id = $1)
+        `, [userId]);
+
+        // 2. Delete assignments
+        await client.query('DELETE FROM assignments WHERE user_id = $1', [userId]);
+
+        // 3. Reset user status if needed (optional, keeping active usually makes sense)
+        // await client.query("UPDATE users SET status = 'pending' WHERE id = $1", [userId]);
+
+        await client.query('COMMIT');
+        return true;
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+}

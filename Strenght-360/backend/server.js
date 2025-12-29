@@ -138,6 +138,7 @@ const {
     createResponse,
     listResponses: dbListResponses,
     getResponseById,
+    queueEmail,
 } = require('./services/database');
 
 /**
@@ -240,6 +241,19 @@ app.post('/api/responses', async (req, res) => {
         await require('./services/database').updateAssignmentStatus(assignment.id, 'submitted');
 
         console.log(`✅ Response saved: ${student_name} (${student_email})`);
+
+        // Queue completion email
+        try {
+            await queueEmail({
+                toEmail: student_email,
+                subject: 'Test Completed Successfully - Atria University',
+                templateName: 'test_completion',
+                templateData: { studentName: student_name },
+            });
+            console.log(`📧 Queued completion email for ${student_email}`);
+        } catch (emailError) {
+            console.error('Failed to queue completion email:', emailError);
+        }
 
         res.json({
             success: true,
