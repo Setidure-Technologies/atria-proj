@@ -847,51 +847,8 @@ async function getDashboardStats() {
 // ============================================
 
 // Export all functions
-module.exports = {
-    pool,
-    // User operations
-    getUserByEmail,
-    getUserById,
-    getUserWithRoles,
-    createUser,
-    updateUser,
-    listUsers,
-    verifyPassword,
-    updatePassword,
-    updateLastLogin,
-    // Test operations
-    createTest,
-    getTestById,
-    listTests,
-    updateTest,
-    // Assignment operations
-    createAssignment,
-    getAssignmentById,
-    getAssignmentByToken,
-    getUserAssignments,
-    updateAssignmentStatus,
-    listAssignments,
-    // Response operations
-    createResponse,
-    getResponseById,
-    getResponseByAssignmentId,
-    listResponses,
-    // Email operations
-    queueEmail,
-    // Invitation operations
-    createInvitation,
-    getInvitationByToken,
-    markInvitationUsed,
-    // Audit operations
-    logAuditAction,
-    getAuditLogs,
-    // Statistics
-    getDashboardStats,
-    resetUserProgress,
-    // Password Reset
-    createPasswordResetToken: createInvitation, // Reuse invitation logic
-    verifyPasswordResetToken: getInvitationByToken, // Reuse invitation logic
-};
+
+
 // No Groq API keys or secrets are present in this file. No changes needed.
 
 /**
@@ -924,3 +881,70 @@ async function resetUserProgress(userId) {
         client.release();
     }
 }
+
+
+
+/**
+ * Get usage statistics (reports generated)
+ * @param {string} period - 'week', 'month', or 'year'
+ */
+async function getUsageStats(period = 'month') {
+    const client = await pool.connect();
+    try {
+        let groupBy;
+        let interval;
+        let format;
+
+        switch (period) {
+            case 'week':
+                groupBy = "TO_CHAR(submitted_at, 'YYYY-MM-DD')";
+                interval = "'7 days'";
+                format = 'Day';
+                break;
+            case 'year':
+                groupBy = "TO_CHAR(submitted_at, 'Mon YYYY')";
+                interval = "'12 months'";
+                format = 'Month';
+                break;
+            case 'month':
+            default:
+                groupBy = "TO_CHAR(submitted_at, 'YYYY-MM-DD')";
+                interval = "'30 days'";
+                format = 'Day';
+                break;
+        }
+
+        const query = `
+            SELECT ${groupBy} as label, COUNT(*) as count, MIN(submitted_at) as sort_date
+            FROM responses
+            WHERE submitted_at >= NOW() - INTERVAL ${interval}
+            GROUP BY label
+            ORDER BY MIN(submitted_at)
+        `;
+
+        const result = await client.query(query);
+        return result.rows;
+    } finally {
+        client.release();
+    }
+}
+
+module.exports = {
+    pool,
+    getUserByEmail,
+    getUserById,
+    getUserWithRoles,
+    createUser,
+    updateUser,
+    updatePassword,
+    createAssignment,
+
+    createResponse,
+    listResponses,
+    getResponseById,
+    getResponseByAssignmentId,
+    queueEmail,
+    getDashboardStats,
+    resetUserProgress,
+    getUsageStats,
+};

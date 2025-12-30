@@ -151,10 +151,11 @@ Powered by Peop360
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #ffffff; padding: 20px; text-align: center; border-bottom: 2px solid #EA580C; }
+          .header { background: #ffffff; padding: 20px; text-align: center; }
           .content { background: #ffffff; padding: 30px; }
-          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; }
+          .footer { padding: 20px; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; }
           .logo { width: 150px; height: auto; }
+          .highlight { font-weight: bold; color: #2563eb; }
         </style>
       </head>
       <body>
@@ -163,28 +164,75 @@ Powered by Peop360
             <img src="cid:logo" alt="Atria University" class="logo" />
           </div>
           <div class="content">
-            <p>Dear ${studentName},</p>
-            <p>Congratulations! You have successfully completed the Strength Analysis Test.</p>
-            <p>We have received your responses and they are being processed. You don't need to take any further action at this moment.</p>
-            <p>Best regards,<br>Admissions Team<br>Atria University</p>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} Atria University. All rights reserved.</p>
+            <p>Congratulations ${studentName},</p>
+            
+            <p>🚀 <strong>You did it. And you crushed it.</strong></p>
+
+            <p>Completing the Strength Analysis Test is a big deal — it means you took time to understand yourself, your strengths, and what you’re really good at. That’s not something everyone your age does, and honestly… it already puts you ahead of the game.</p>
+
+            <p>You showed curiosity. You showed effort. You showed intent.<br>
+            That’s powerful. 💪✨</p>
+
+            <p><strong>What happens next?</strong><br>
+            Very soon, a senior counsellor from Atria University will reach out to you to:</p>
+
+            <ul>
+                <li>🔍 Walk you through your personalised report</li>
+                <li>💡 Explain what your strengths say about you</li>
+                <li>🎯 Guide you on academic pathways and next steps that align with your goals</li>
+            </ul>
+
+            <p>This isn’t a sales call. It’s a real conversation focused on you and your future — so come curious, come with questions, and come ready to explore what’s possible.</p>
+
+            <p>Once again, huge kudos for completing the test.<br>
+            We’re excited to connect and help you take the next big step.</p>
+
+            <p>Catch you soon 👋</p>
+
+            <p>Best regards,</p>
+            
+            <p>
+            <img src="cid:logo" alt="Atria University" style="width: 100px; height: auto;" /><br>
+            <strong>Atria University</strong><br>
+            ASKB Campus, Anandnagar, Bengaluru 560 024<br>
+            M: +91 9900090992 | <a href="http://www.atriauniversity.edu.in" style="color: #2563eb; text-decoration: none;">www.atriauniversity.edu.in</a>
+            </p>
           </div>
         </div>
       </body>
       </html>
     `,
     text: `
-Dear ${studentName},
+Congratulations ${studentName},
 
-Congratulations! You have successfully completed the Strength Analysis Test.
+🚀 You did it. And you crushed it.
 
-We have received your responses and they are being processed. You don't need to take any further action at this moment.
+Completing the Strength Analysis Test is a big deal — it means you took time to understand yourself, your strengths, and what you’re really good at. That’s not something everyone your age does, and honestly… it already puts you ahead of the game.
+
+You showed curiosity. You showed effort. You showed intent.
+That’s powerful. 💪✨
+
+What happens next?
+Very soon, a senior counsellor from Atria University will reach out to you to:
+
+    🔍 Walk you through your personalised report
+
+    💡 Explain what your strengths say about you
+
+    🎯 Guide you on academic pathways and next steps that align with your goals
+
+This isn’t a sales call. It’s a real conversation focused on you and your future — so come curious, come with questions, and come ready to explore what’s possible.
+
+Once again, huge kudos for completing the test.
+We’re excited to connect and help you take the next big step.
+
+Catch you soon 👋
 
 Best regards,
-Admissions Team
+
 Atria University
+ASKB Campus, Anandnagar, Bengaluru 560 024
+M: +91 9900090992 | www.atriauniversity.edu.in
     `,
   }),
 };
@@ -238,8 +286,8 @@ async function processEmailQueue() {
         text: emailContent.text,
         attachments: [
           {
-            filename: 'logo.jpeg',
-            path: '/app/assets/peop360_logo_powered.jpeg',
+            filename: 'logo.png',
+            path: '/app/assets/atria_logo.png',
             cid: 'logo', // same as in email template
           },
         ],

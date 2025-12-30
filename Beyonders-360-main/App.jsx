@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { initializeApp } from 'firebase/app';
-import { 
-    getAuth, 
-    signInAnonymously, 
-    signInWithCustomToken, 
-    onAuthStateChanged 
+import {
+    getAuth,
+    signInAnonymously,
+    signInWithCustomToken,
+    onAuthStateChanged
 } from 'firebase/auth';
-import { 
-    getFirestore, 
-    doc, 
-    collection, 
-    addDoc, 
-    query, 
-    onSnapshot, 
+import {
+    getFirestore,
+    doc,
+    collection,
+    addDoc,
+    query,
+    onSnapshot,
     serverTimestamp,
-    setLogLevel 
+    setLogLevel
 } from 'firebase/firestore';
 
 // --- Global Variables and Configuration ---
@@ -37,76 +37,76 @@ const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial
 
 // TAT Card Data - Load from card-metadata.json
 const TAT_CARDS = [
-  {
-    "card_id": 1,
-    "set": "Grayscale",
-    "image_path": "/images/1.jpeg",
-    "description": "A young person sits alone in a dim room looking down at an object in their hands.",
-    "tags": ["solitude", "uncertainty", "introspection", "decision-making"]
-  },
-  {
-    "card_id": 2,
-    "set": "Grayscale",
-    "image_path": "/images/2.jpeg",
-    "description": "A teenage boy stands leaning against a doorway, observing something outside.",
-    "tags": ["observation", "pause", "anticipation", "transition"]
-  },
-  {
-    "card_id": 3,
-    "set": "Grayscale",
-    "image_path": "/images/3.jpeg",
-    "description": "A student sits at a table with books scattered around, head in hands.",
-    "tags": ["stress", "academics", "pressure", "mental fatigue"]
-  },
-  {
-    "card_id": 4,
-    "set": "Grayscale",
-    "image_path": "/images/4.jpeg",
-    "description": "Two people face each other in a quiet room; one sitting and one standing.",
-    "tags": ["relationship tension", "authority", "interaction", "communication"]
-  },
-  {
-    "card_id": 5,
-    "set": "Grayscale",
-    "image_path": "/images/5.jpeg",
-    "description": "A person stands outdoors near a barren tree looking into the distance.",
-    "tags": ["isolation", "reflection", "nature", "future uncertainty"]
-  },
-  {
-    "card_id": 21,
-    "set": "Set B",
-    "image_path": "/images/21.jpeg",
-    "description": "A teenager sits on a couch while adults argue in the background.",
-    "tags": ["family conflict", "stress", "helplessness", "tension"]
-  },
-  {
-    "card_id": 25,
-    "set": "Set B",
-    "image_path": "/images/25.jpeg",
-    "description": "A youth looks at themselves in a mirror, touching the reflection.",
-    "tags": ["identity", "self-image", "self-reflection", "adolescence"]
-  },
-  {
-    "card_id": 27,
-    "set": "Set B",
-    "image_path": "/images/27.jpeg",
-    "description": "A teenager stands at a crossroads or two doorways choosing a direction.",
-    "tags": ["decision-making", "future choices", "uncertainty", "transition"]
-  },
-  {
-    "card_id": 11,
-    "set": "Set A",
-    "image_path": "/images/11.jpeg",
-    "description": "A student presents at the front of a classroom while peers observe.",
-    "tags": ["performance", "peer evaluation", "public speaking", "achievement"]
-  },
-  {
-    "card_id": 14,
-    "set": "Set A",
-    "image_path": "/images/14.jpeg",
-    "description": "A student sits alone in a classroom after others have left.",
-    "tags": ["isolation", "reflection", "school environment", "quiet moment"]
-  }
+    {
+        "card_id": 1,
+        "set": "Grayscale",
+        "image_path": "/images/1.jpeg",
+        "description": "A young person sits alone in a dim room looking down at an object in their hands.",
+        "tags": ["solitude", "uncertainty", "introspection", "decision-making"]
+    },
+    {
+        "card_id": 2,
+        "set": "Grayscale",
+        "image_path": "/images/2.jpeg",
+        "description": "A teenage boy stands leaning against a doorway, observing something outside.",
+        "tags": ["observation", "pause", "anticipation", "transition"]
+    },
+    {
+        "card_id": 3,
+        "set": "Grayscale",
+        "image_path": "/images/3.jpeg",
+        "description": "A student sits at a table with books scattered around, head in hands.",
+        "tags": ["stress", "academics", "pressure", "mental fatigue"]
+    },
+    {
+        "card_id": 4,
+        "set": "Grayscale",
+        "image_path": "/images/4.jpeg",
+        "description": "Two people face each other in a quiet room; one sitting and one standing.",
+        "tags": ["relationship tension", "authority", "interaction", "communication"]
+    },
+    {
+        "card_id": 5,
+        "set": "Grayscale",
+        "image_path": "/images/5.jpeg",
+        "description": "A person stands outdoors near a barren tree looking into the distance.",
+        "tags": ["isolation", "reflection", "nature", "future uncertainty"]
+    },
+    {
+        "card_id": 21,
+        "set": "Set B",
+        "image_path": "/images/21.jpeg",
+        "description": "A teenager sits on a couch while adults argue in the background.",
+        "tags": ["family conflict", "stress", "helplessness", "tension"]
+    },
+    {
+        "card_id": 25,
+        "set": "Set B",
+        "image_path": "/images/25.jpeg",
+        "description": "A youth looks at themselves in a mirror, touching the reflection.",
+        "tags": ["identity", "self-image", "self-reflection", "adolescence"]
+    },
+    {
+        "card_id": 27,
+        "set": "Set B",
+        "image_path": "/images/27.jpeg",
+        "description": "A teenager stands at a crossroads or two doorways choosing a direction.",
+        "tags": ["decision-making", "future choices", "uncertainty", "transition"]
+    },
+    {
+        "card_id": 11,
+        "set": "Set A",
+        "image_path": "/images/11.jpeg",
+        "description": "A student presents at the front of a classroom while peers observe.",
+        "tags": ["performance", "peer evaluation", "public speaking", "achievement"]
+    },
+    {
+        "card_id": 14,
+        "set": "Set A",
+        "image_path": "/images/14.jpeg",
+        "description": "A student sits alone in a classroom after others have left.",
+        "tags": ["isolation", "reflection", "school environment", "quiet moment"]
+    }
 ];
 
 // Difficulty levels map to score multipliers
@@ -213,7 +213,7 @@ const callGroqApi = async (userQuery, systemPrompt) => {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userQuery }
     ];
-    
+
     const payload = {
         model: GROQ_MODEL,
         messages: messages,
@@ -225,7 +225,7 @@ const callGroqApi = async (userQuery, systemPrompt) => {
     try {
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${GROQ_API_KEY}`
             },
@@ -237,12 +237,12 @@ const callGroqApi = async (userQuery, systemPrompt) => {
         }
 
         const result = await response.json();
-        
+
         if (!result.choices || !result.choices[0] || !result.choices[0].message) {
             console.error("Groq API response structure error:", result);
             return "Error: Could not generate content.";
         }
-        
+
         return result.choices[0].message.content.trim();
     } catch (error) {
         console.error("Groq API call failed:", error);
@@ -286,7 +286,7 @@ const useFirebase = () => {
             const app = initializeApp(firebaseConfig);
             const firestore = getFirestore(app);
             const authInstance = getAuth(app);
-            
+
             setDb(firestore);
             setAuth(authInstance);
 
@@ -360,7 +360,7 @@ const useScores = (db, currentUser) => {
 
         // Admin needs to see all public scores
         const q = query(collection(db, scoresCollectionPath));
-        
+
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedScores = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -403,7 +403,7 @@ const useScores = (db, currentUser) => {
                 body: JSON.stringify({
                     token: token,
                     // Map Beyonders scores to Strength 360 format for compatibility
-                    executing_score: Math.round((scoreData.correctAnswers / 30) * 100), 
+                    executing_score: Math.round((scoreData.correctAnswers / 30) * 100),
                     influencing_score: Math.round((scoreData.finalScore / 1000) * 100),
                     relationship_building_score: Math.round(75 + Math.random() * 25),
                     strategic_thinking_score: Math.round(70 + Math.random() * 30),
@@ -424,7 +424,7 @@ const useScores = (db, currentUser) => {
             });
 
             const result = await response.json();
-            
+
             if (result.success) {
                 console.log("Score successfully saved to backend!");
                 alert('Test submitted successfully!');
@@ -436,7 +436,7 @@ const useScores = (db, currentUser) => {
             // Fallback to local storage
             console.log("Fallback: Score saved locally", {
                 ...scoreData,
-                userId: currentUser?.uid || 'anonymous', 
+                userId: currentUser?.uid || 'anonymous',
                 timestamp: new Date(),
             });
         }
@@ -449,17 +449,17 @@ const useScores = (db, currentUser) => {
 
 const Button = ({ children, onClick, className = '', disabled = false, variant = 'default' }) => {
     const baseClasses = "font-medium transition-all duration-300 rounded-2xl border transform active:translate-y-0";
-    
+
     const variantClasses = {
         default: "px-6 py-3 bg-white text-slate-700 border-slate-200 shadow-[0_4px_15px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] hover:bg-slate-50 hover:-translate-y-1 active:bg-slate-100",
         primary: "px-6 py-3 bg-slate-800 text-white border-slate-800 shadow-[0_6px_20px_rgba(51,65,85,0.25)] hover:bg-slate-900 hover:shadow-[0_8px_25px_rgba(51,65,85,0.35)] hover:-translate-y-1",
         purple: "px-6 py-3 bg-purple-600 text-white border-purple-600 shadow-[0_4px_15px_rgba(147,51,234,0.2)] hover:bg-purple-700 hover:-translate-y-1"
     };
-    
-    const appliedClasses = disabled 
-        ? "px-6 py-3 bg-slate-400 text-white opacity-75 cursor-not-allowed transform-none shadow-none border-slate-400" 
+
+    const appliedClasses = disabled
+        ? "px-6 py-3 bg-slate-400 text-white opacity-75 cursor-not-allowed transform-none shadow-none border-slate-400"
         : variantClasses[variant];
-    
+
     return (
         <button
             onClick={onClick}
@@ -561,12 +561,12 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
         }
 
         setIsAnalyzing(true);
-        
+
         try {
             // AI Analysis using NPP-30 system
             const storyTags = await analyzeStoryThemes(currentStory, currentCard);
             const nppScores = await generateNPPScores(currentStory, currentCard);
-            
+
             await handleTATStory({
                 cardId: currentCard.card_id,
                 story: currentStory,
@@ -610,7 +610,7 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
     // AI Analysis Functions
     const analyzeStoryThemes = async (story, card) => {
         const systemPrompt = `You are an AI psychologist trained in narrative analysis. Analyze the following story and extract psychological themes using the Narrative Story Tagger schema. Respond only with valid JSON.`;
-        
+
         const userQuery = `Analyze this story for psychological themes: "${story}"
         
         Image context: ${card.description}
@@ -642,7 +642,7 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
 
     const generateNPPScores = async (story, card) => {
         const systemPrompt = `You are an AI psychologist using the NPP-30 (Narrative Psychological Profile) scoring system. Score this story on 10 dimensions from 0-5 where 0=Absent, 1=Very Low, 2=Low, 3=Moderate, 4=High, 5=Very High. Respond only with valid JSON.`;
-        
+
         const userQuery = `Score this story using NPP-30 metrics: "${story}"
         
         Image context: ${card.description}
@@ -702,15 +702,15 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50 relative">
             {/* Progress bar */}
             <div className="absolute top-0 left-0 h-1 bg-purple-600 transition-all duration-500 z-10" style={{ width: `${progressPercentage}%` }}></div>
-            
+
             <div className="flex flex-col min-h-screen p-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
                     <div>
                         <div className="flex items-center mb-2">
-                            <img 
-                                src="/atria logo.jpg" 
-                                alt="Atria University" 
+                            <img
+                                src="/atria-logo.jpg"
+                                alt="Atria University"
                                 className="h-16 w-auto mr-4"
                             />
                         </div>
@@ -725,9 +725,8 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className={`text-2xl font-medium mb-1 ${
-                            timeRemaining < 60 ? 'text-red-600' : timeRemaining < 120 ? 'text-amber-600' : 'text-slate-700'
-                        }`}>
+                        <div className={`text-2xl font-medium mb-1 ${timeRemaining < 60 ? 'text-red-600' : timeRemaining < 120 ? 'text-amber-600' : 'text-slate-700'
+                            }`}>
                             {formatTime(timeRemaining)}
                         </div>
                         <div className="text-slate-500 text-sm font-light">Time Remaining</div>
@@ -740,8 +739,8 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
                         <Card className="p-6 h-full">
                             {/* Display the actual image */}
                             <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-center min-h-80">
-                                <img 
-                                    src={currentCard.image_path} 
+                                <img
+                                    src={currentCard.image_path}
                                     alt={`Assessment Image`}
                                     className="max-w-full max-h-80 object-contain rounded-lg shadow-md"
                                     onError={(e) => {
@@ -749,7 +748,7 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
                                         e.target.nextSibling.style.display = 'block';
                                     }}
                                 />
-                                <div 
+                                <div
                                     className="text-slate-500 text-sm text-center p-8"
                                     style={{ display: 'none' }}
                                 >
@@ -772,7 +771,7 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
                                     <div className="w-2 h-6 bg-purple-400 mr-4"></div>
                                     Write Your Story
                                 </h3>
-                                
+
                                 <div className="bg-purple-50 rounded-xl p-4 border border-purple-200 mb-6">
                                     <h4 className="font-medium text-purple-800 mb-2">Include these elements:</h4>
                                     <div className="grid grid-cols-2 gap-3 text-sm text-purple-700">
@@ -797,23 +796,22 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
                                     <span className="text-slate-500">
                                         {currentStory.length} characters (minimum 50 recommended)
                                     </span>
-                                    <span className={`font-medium ${
-                                        currentStory.length < 50 ? 'text-amber-600' : 'text-green-600'
-                                    }`}>
+                                    <span className={`font-medium ${currentStory.length < 50 ? 'text-amber-600' : 'text-green-600'
+                                        }`}>
                                         {currentStory.length < 50 ? 'Keep writing...' : 'Good length!'}
                                     </span>
                                 </div>
                             </div>
 
                             {/* Submit Button */}
-                            <Button 
+                            <Button
                                 onClick={handleStorySubmission}
                                 disabled={isAnalyzing || currentStory.trim().length < 10}
                                 variant="purple"
                                 className="w-full py-4 text-lg"
                             >
-                                {isAnalyzing ? 'Analyzing Story...' : 
-                                 tatSession.currentCardIndex === tatSession.cards.length - 1 ? 'Complete Assessment' : 'Continue to Next Image'}
+                                {isAnalyzing ? 'Analyzing Story...' :
+                                    tatSession.currentCardIndex === tatSession.cards.length - 1 ? 'Complete Assessment' : 'Continue to Next Image'}
                             </Button>
                         </Card>
                     </div>
@@ -827,7 +825,7 @@ const TATAssessment = ({ tatSession, handleTATStory, submitTATAssessment, increm
 
 const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
     const stories = tatSession.stories || [];
-    
+
     // Calculate overall NPP scores by averaging individual story scores
     const calculateOverallNPPScores = () => {
         const validStories = stories.filter(story => story.analysis && story.analysis.nppScores);
@@ -859,11 +857,11 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
     }, {});
 
     const topThemes = Object.entries(themeFrequency)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 8);
 
     const formatMetricName = (metric) => {
-        return metric.split('_').map(word => 
+        return metric.split('_').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
     };
@@ -889,9 +887,9 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                 {/* Header */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 mb-8 border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
                     <div className="flex items-center mb-4">
-                        <img 
-                            src="/atria logo.jpg" 
-                            alt="Atria University" 
+                        <img
+                            src="/atria-logo.jpg"
+                            alt="Atria University"
                             className="h-20 w-auto mr-4"
                         />
                         <div>
@@ -908,7 +906,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                     // Calculate overall TAT score (0-100)
                     const nppAverage = Object.values(overallNPPScores).reduce((sum, score) => sum + score, 0) / Object.keys(overallNPPScores).length;
                     const overallScore = Math.round((nppAverage / 5) * 100);
-                    
+
                     const getScoreCategory = (score) => {
                         if (score >= 85) return { category: 'Excellent', color: 'text-emerald-600', bgColor: 'bg-emerald-600', description: 'Outstanding psychological narrative capabilities' };
                         if (score >= 75) return { category: 'Very Good', color: 'text-green-600', bgColor: 'bg-green-600', description: 'Strong narrative and emotional understanding' };
@@ -917,9 +915,9 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                         if (score >= 45) return { category: 'Below Average', color: 'text-orange-600', bgColor: 'bg-orange-600', description: 'Developing narrative capabilities' };
                         return { category: 'Needs Development', color: 'text-red-600', bgColor: 'bg-red-600', description: 'Limited narrative expression observed' };
                     };
-                    
+
                     const scoreInfo = getScoreCategory(overallScore);
-                    
+
                     return (
                         <Card className="p-8 mb-8 relative overflow-hidden">
                             {/* Background gradient */}
@@ -930,7 +928,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                         <div className="w-4 h-10 bg-gradient-to-b from-purple-400 to-indigo-500 mr-4 rounded-full"></div>
                                         <h2 className="text-3xl font-medium text-slate-800">Overall TAT Score</h2>
                                     </div>
-                                    
+
                                     {/* Large Score Display */}
                                     <div className="relative mb-6">
                                         <div className="w-48 h-48 mx-auto relative">
@@ -962,7 +960,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                                     </linearGradient>
                                                 </defs>
                                             </svg>
-                                            
+
                                             {/* Score Text */}
                                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                                 <div className="text-5xl font-light text-slate-800 mb-2">{overallScore}</div>
@@ -970,18 +968,18 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Score Category */}
                                     <div className={`inline-flex items-center px-6 py-3 rounded-full text-xl font-medium ${scoreInfo.color} bg-white shadow-lg border-2 border-current/20 mb-4`}>
                                         <div className={`w-3 h-3 ${scoreInfo.bgColor} rounded-full mr-3`}></div>
                                         {scoreInfo.category}
                                     </div>
-                                    
+
                                     <p className="text-slate-600 font-light text-lg max-w-2xl mx-auto">
                                         {scoreInfo.description}
                                     </p>
                                 </div>
-                                
+
                                 {/* Score Breakdown */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="text-center p-6 bg-white/80 rounded-2xl border border-slate-200">
@@ -990,34 +988,34 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                         </div>
                                         <p className="text-slate-600 font-light">NPP-30 Average</p>
                                         <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
-                                            <div 
-                                                className="bg-purple-500 h-2 rounded-full transition-all duration-1000" 
+                                            <div
+                                                className="bg-purple-500 h-2 rounded-full transition-all duration-1000"
                                                 style={{ width: `${(nppAverage / 5) * 100}%` }}
                                             ></div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="text-center p-6 bg-white/80 rounded-2xl border border-slate-200">
                                         <div className="text-2xl font-light text-slate-800 mb-2">
                                             {Math.round((topThemes.length / stories.length) * 100)}%
                                         </div>
                                         <p className="text-slate-600 font-light">Theme Richness</p>
                                         <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
-                                            <div 
-                                                className="bg-indigo-500 h-2 rounded-full transition-all duration-1000" 
+                                            <div
+                                                className="bg-indigo-500 h-2 rounded-full transition-all duration-1000"
                                                 style={{ width: `${Math.min((topThemes.length / stories.length) * 100, 100)}%` }}
                                             ></div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="text-center p-6 bg-white/80 rounded-2xl border border-slate-200">
                                         <div className="text-2xl font-light text-slate-800 mb-2">
                                             {Math.round((420 * stories.length - totalTime) / (420 * stories.length) * 100)}%
                                         </div>
                                         <p className="text-slate-600 font-light">Time Efficiency</p>
                                         <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
-                                            <div 
-                                                className="bg-emerald-500 h-2 rounded-full transition-all duration-1000" 
+                                            <div
+                                                className="bg-emerald-500 h-2 rounded-full transition-all duration-1000"
                                                 style={{ width: `${Math.round((420 * stories.length - totalTime) / (420 * stories.length) * 100)}%` }}
                                             ></div>
                                         </div>
@@ -1065,7 +1063,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                         <p className="text-slate-600 font-light mb-6">
                             Scores averaged across all your stories (0 = Absent, 5 = Very High)
                         </p>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {Object.entries(overallNPPScores).map(([metric, score]) => (
                                 <div key={metric} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -1076,8 +1074,8 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                         </span>
                                     </div>
                                     <div className="w-full bg-slate-200 rounded-full h-3">
-                                        <div 
-                                            className="bg-purple-500 h-3 rounded-full transition-all duration-500" 
+                                        <div
+                                            className="bg-purple-500 h-3 rounded-full transition-all duration-500"
                                             style={{ width: `${(score / 5) * 100}%` }}
                                         ></div>
                                     </div>
@@ -1116,7 +1114,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                         <div className="w-3 h-8 bg-emerald-400 mr-4"></div>
                         <h2 className="text-2xl font-medium text-slate-800">Your Stories</h2>
                     </div>
-                    
+
                     <div className="space-y-6">
                         {stories.map((story, index) => {
                             const card = tatSession.cards.find(c => c.card_id === story.cardId);
@@ -1126,8 +1124,8 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                         <div className="flex items-center">
                                             <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 mr-4 flex-shrink-0">
                                                 {card?.image_path ? (
-                                                    <img 
-                                                        src={card.image_path} 
+                                                    <img
+                                                        src={card.image_path}
                                                         alt={`Assessment Image ${index + 1}`}
                                                         className="w-full h-full object-cover"
                                                         onError={(e) => {
@@ -1136,7 +1134,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                                         }}
                                                     />
                                                 ) : null}
-                                                <div 
+                                                <div
                                                     className="w-full h-full flex items-center justify-center text-slate-400 text-xs"
                                                     style={{ display: card?.image_path ? 'none' : 'flex' }}
                                                 >
@@ -1149,7 +1147,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="mb-4">
                                         <h5 className="font-medium text-slate-700 mb-2">Image Description:</h5>
                                         <p className="text-sm text-slate-600 italic bg-slate-50 p-3 rounded-lg">
@@ -1205,7 +1203,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                 <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-200">
                     <h4 className="font-medium text-amber-800 mb-2">Important Note</h4>
                     <p className="text-amber-700 text-sm leading-relaxed">
-                        This TAT assessment is designed for educational purposes to help you understand projective testing concepts. 
+                        This TAT assessment is designed for educational purposes to help you understand projective testing concepts.
                         The results are not for clinical diagnosis and should be used for learning, discussion, and self-reflection only.
                     </p>
                 </div>
@@ -1213,27 +1211,27 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
                 {/* Back Button */}
                 {!hideBackButton && (
                     <div className="mt-8 text-center">
-                        <Button 
-                            onClick={resetApp} 
+                        <Button
+                            onClick={resetApp}
                             variant="primary"
                             className="px-8 py-4 text-lg"
                         >
                             Return to Dashboard
                         </Button>
-                        
+
                         {/* Peop360 Branding */}
                         <div className="mt-8">
                             <div className="flex items-center justify-center space-x-3">
                                 <span className="text-base text-slate-600 font-light">Created by :</span>
-                                <a 
-                                    href="https://www.peop360.com" 
-                                    target="_blank" 
+                                <a
+                                    href="https://www.peop360.com"
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="hover:scale-105 transition-transform duration-300"
                                 >
-                                    <img 
-                                        src="/images/peop360-logo.png" 
-                                        alt="Peop360" 
+                                    <img
+                                        src="/atria-logo.jpg"
+                                        alt="Peop360"
                                         className="h-8 w-auto"
                                     />
                                 </a>
@@ -1250,7 +1248,7 @@ const TATResultsScreen = ({ tatSession, resetApp, hideBackButton = false }) => {
 
 const LoginScreen = ({ setUserRole, isAuthReady, currentUser, userId }) => {
     if (!isAuthReady) return <LoadingSpinner />;
-    
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 relative">
             {/* Subtle 3D geometric shapes */}
@@ -1259,13 +1257,13 @@ const LoginScreen = ({ setUserRole, isAuthReady, currentUser, userId }) => {
                 <div className="absolute bottom-1/3 right-1/4 w-16 h-16 bg-slate-300/20 rounded-full shadow-md"></div>
                 <div className="absolute top-1/2 right-1/3 w-12 h-12 bg-indigo-400/15 transform rotate-12 shadow-sm"></div>
             </div>
-            
+
             <div className="relative flex flex-col items-center justify-center min-h-screen p-8">
                 {/* Main Title */}
                 <div className="text-center mb-12">
-                    <img 
-                        src="/atria logo.jpg" 
-                        alt="Atria University" 
+                    <img
+                        src="/atria-logo.jpg"
+                        alt="Atria University"
                         className="h-32 w-auto mx-auto mb-6"
                     />
                     <h1 className="text-6xl font-light text-slate-800 mb-4 tracking-wide">
@@ -1275,7 +1273,7 @@ const LoginScreen = ({ setUserRole, isAuthReady, currentUser, userId }) => {
                     <div className="w-24 h-0.5 bg-blue-400 mx-auto mb-4"></div>
                     <p className="text-lg text-slate-600 font-light">Advanced Assessment Platform</p>
                 </div>
-                
+
                 {/* Main Card */}
                 <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-200/50 max-w-md w-full transform hover:shadow-[0_25px_60px_rgba(0,0,0,0.15)] transition-all duration-500">
                     <div className="text-center mb-8">
@@ -1285,7 +1283,7 @@ const LoginScreen = ({ setUserRole, isAuthReady, currentUser, userId }) => {
                         <h2 className="text-2xl font-light text-slate-700 mb-2">Get Started</h2>
                         <p className="text-slate-500 font-light">Select your role to continue</p>
                     </div>
-                    
+
                     <div className="space-y-4">
                         <button
                             onClick={() => setUserRole({ role: 'student', id: userId })}
@@ -1306,14 +1304,14 @@ const LoginScreen = ({ setUserRole, isAuthReady, currentUser, userId }) => {
                             </div>
                         </button>
                     </div>
-                    
+
                     <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
                         <p className="text-xs text-gray-400 text-center font-light">
                             Session ID: <span className="font-mono text-gray-500">{userId.substring(0, 8)}...</span>
                         </p>
                     </div>
                 </div>
-                
+
                 {/* Feature indicators */}
                 <div className="mt-12 flex space-x-8">
                     <div className="text-center">
@@ -1329,20 +1327,20 @@ const LoginScreen = ({ setUserRole, isAuthReady, currentUser, userId }) => {
                         <p className="text-xs text-slate-500 font-light">Secure</p>
                     </div>
                 </div>
-                
+
                 {/* Peop360 Branding */}
                 <div className="mt-16 text-center">
                     <div className="flex items-center justify-center space-x-2">
                         <span className="text-sm text-slate-600 font-light">Created by :</span>
-                        <a 
-                            href="https://www.peop360.com" 
-                            target="_blank" 
+                        <a
+                            href="https://www.peop360.com"
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="hover:scale-105 transition-transform duration-300"
                         >
-                            <img 
-                                src="/images/peop360-logo.png" 
-                                alt="Peop360" 
+                            <img
+                                src="/atria-logo.jpg"
+                                alt="Peop360"
                                 className="h-6 w-auto"
                             />
                         </a>
@@ -1364,13 +1362,13 @@ const StudentDashboard = () => {
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23334155' fill-opacity='1'%3E%3Cpath d='M20 20c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm10 0c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/svg%3E")`
                 }}></div>
             </div>
-            
+
             <div className="relative flex flex-col items-center justify-center min-h-screen p-8">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <img 
-                        src="/atria logo.jpg" 
-                        alt="Atria University" 
+                    <img
+                        src="/atria-logo.jpg"
+                        alt="Atria University"
                         className="h-32 w-auto mx-auto mb-6"
                     />
                     <h1 className="text-5xl font-light text-slate-800 mb-4">
@@ -1444,7 +1442,7 @@ const StudentDashboard = () => {
                                 <p>• AI-powered hints available</p>
                             </div>
                         </div>
-                        
+
                         <div className="bg-purple-50 rounded-2xl p-6 border border-purple-200">
                             <h4 className="font-semibold text-purple-800 mb-4">Part 2: TAT Assessment (Question 31)</h4>
                             <div className="space-y-2 text-sm text-purple-700">
@@ -1474,20 +1472,20 @@ const StudentDashboard = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Peop360 Branding */}
                 <div className="mt-12 text-center">
                     <div className="flex items-center justify-center space-x-3">
                         <span className="text-base text-slate-600 font-light">Created by :</span>
-                        <a 
-                            href="https://www.peop360.com" 
-                            target="_blank" 
+                        <a
+                            href="https://www.peop360.com"
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="hover:scale-105 transition-transform duration-300"
                         >
-                            <img 
-                                src="/images/peop360-logo.png" 
-                                alt="Peop360" 
+                            <img
+                                src="/atria-logo.jpg"
+                                alt="Peop360"
                                 className="h-8 w-auto"
                             />
                         </a>
@@ -1525,7 +1523,7 @@ const StreamAssessmentConfig = ({ stream, startQuiz }) => {
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23334155' fill-opacity='1'%3E%3Cpath d='M20 20c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm10 0c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/svg%3E")`
                 }}></div>
             </div>
-            
+
             <div className="relative flex flex-col items-center justify-center min-h-screen p-8">
                 {/* Back button */}
                 <div className="absolute top-8 left-8">
@@ -1536,9 +1534,9 @@ const StreamAssessmentConfig = ({ stream, startQuiz }) => {
 
                 {/* Atria University Header */}
                 <div className="text-center mb-8">
-                    <img 
-                        src="/atria logo.jpg" 
-                        alt="Atria University" 
+                    <img
+                        src="/atria-logo.jpg"
+                        alt="Atria University"
                         className="h-24 w-auto mx-auto mb-3"
                     />
                 </div>
@@ -1570,7 +1568,7 @@ const StreamAssessmentConfig = ({ stream, startQuiz }) => {
                                 <p className="font-medium">• Automatically progresses to Part 2 after completion</p>
                             </div>
                         </div>
-                        
+
                         <div className="bg-purple-50 rounded-2xl p-6 border border-purple-200">
                             <h4 className="font-semibold text-purple-800 mb-4">Part 2: TAT Assessment (Question 31)</h4>
                             <div className="space-y-2 text-sm text-purple-700">
@@ -1595,15 +1593,13 @@ const StreamAssessmentConfig = ({ stream, startQuiz }) => {
                             <button
                                 key={key}
                                 onClick={() => setInitialDifficulty(key)}
-                                className={`p-4 rounded-xl border text-center transition-all duration-300 transform hover:-translate-y-0.5 ${
-                                    initialDifficulty === key
+                                className={`p-4 rounded-xl border text-center transition-all duration-300 transform hover:-translate-y-0.5 ${initialDifficulty === key
                                         ? 'border-indigo-400 bg-indigo-50 shadow-[0_6px_20px_rgba(99,102,241,0.15)]'
                                         : 'border-slate-200 bg-white hover:border-indigo-300 shadow-[0_3px_10px_rgba(0,0,0,0.04)]'
-                                }`}
+                                    }`}
                             >
-                                <div className={`w-8 h-8 rounded-lg mx-auto mb-3 ${
-                                    key === 'EASY' ? 'bg-emerald-300' : key === 'MEDIUM' ? 'bg-amber-400' : 'bg-red-400'
-                                }`}></div>
+                                <div className={`w-8 h-8 rounded-lg mx-auto mb-3 ${key === 'EASY' ? 'bg-emerald-300' : key === 'MEDIUM' ? 'bg-amber-400' : 'bg-red-400'
+                                    }`}></div>
                                 <div className="font-medium text-slate-700">{level.label}</div>
                                 <div className="text-xs text-slate-500 mt-1">{level.multiplier}x multiplier</div>
                             </button>
@@ -1613,8 +1609,8 @@ const StreamAssessmentConfig = ({ stream, startQuiz }) => {
 
                 {/* Start Button */}
                 <Card className="max-w-4xl w-full p-8">
-                    <Button 
-                        onClick={() => startQuiz(stream, initialDifficulty)} 
+                    <Button
+                        onClick={() => startQuiz(stream, initialDifficulty)}
                         variant="primary"
                         className="w-full py-4 text-lg"
                     >
@@ -1648,15 +1644,15 @@ const StreamAssessmentConfig = ({ stream, startQuiz }) => {
                 <div className="mt-12 text-center">
                     <div className="flex items-center justify-center space-x-3">
                         <span className="text-base text-slate-600 font-light">Created by :</span>
-                        <a 
-                            href="https://www.peop360.com" 
-                            target="_blank" 
+                        <a
+                            href="https://www.peop360.com"
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="hover:scale-105 transition-transform duration-300"
                         >
-                            <img 
-                                src="/images/peop360-logo.png" 
-                                alt="Peop360" 
+                            <img
+                                src="/atria-logo.jpg"
+                                alt="Peop360"
                                 className="h-8 w-auto"
                             />
                         </a>
@@ -1672,9 +1668,9 @@ const AdminDashboard = ({ scores, loadingScores, currentUser, userId, goBackToLo
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50 p-8">
             <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center space-x-4">
-                    <img 
-                        src="/atria logo.jpg" 
-                        alt="Atria University" 
+                    <img
+                        src="/atria-logo.jpg"
+                        alt="Atria University"
                         className="h-20 w-auto"
                     />
                     <div>
@@ -1686,7 +1682,7 @@ const AdminDashboard = ({ scores, loadingScores, currentUser, userId, goBackToLo
                     Sign Out
                 </Button>
             </div>
-            
+
             <div className="mb-6 p-4 bg-white/80 rounded-2xl border border-slate-200">
                 <p className="text-sm text-slate-600 font-light">
                     Administrator ID: <span className="font-mono text-slate-700">{userId.substring(0, 16)}...</span>
@@ -1733,11 +1729,10 @@ const AdminDashboard = ({ scores, loadingScores, currentUser, userId, goBackToLo
                                         <td className="px-6 py-4 text-sm font-semibold text-slate-800">{score.finalScore.toFixed(1)}</td>
                                         <td className="px-6 py-4 text-sm text-slate-600">{score.timeTaken.toFixed(0)}s</td>
                                         <td className="px-6 py-4 text-sm font-medium text-center">
-                                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                                                score.proctorWarnings === 0 
-                                                    ? 'bg-green-100 text-green-700' 
+                                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${score.proctorWarnings === 0
+                                                    ? 'bg-green-100 text-green-700'
                                                     : 'bg-red-100 text-red-700'
-                                            }`}>
+                                                }`}>
                                                 {score.proctorWarnings === 0 ? 'Good' : `${score.proctorWarnings} warning${score.proctorWarnings > 1 ? 's' : ''}`}
                                             </div>
                                         </td>
@@ -1777,8 +1772,8 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
         };
 
         const handleBlur = () => {
-             console.warn("Proctor Warning: Window lost focus (blur event)!");
-             incrementProctorWarning();
+            console.warn("Proctor Warning: Window lost focus (blur event)!");
+            incrementProctorWarning();
         };
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -1797,7 +1792,7 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
             setHint(null); // Clear hint for the next question
         }
     };
-    
+
     const isDomainQuestion = currentQuestion?.type === 'DOMAIN';
 
     const generateHint = async () => {
@@ -1842,15 +1837,15 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative">
             {/* Progress bar */}
             <div className="absolute top-0 left-0 h-1 bg-blue-600 transition-all duration-500 z-10" style={{ width: `${progressPercentage}%` }}></div>
-            
+
             <div className="flex flex-col min-h-screen p-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
                     <div>
                         <div className="flex items-center mb-2">
-                            <img 
-                                src="/atria logo.jpg" 
-                                alt="Atria University" 
+                            <img
+                                src="/atria-logo.jpg"
+                                alt="Atria University"
                                 className="h-16 w-auto mr-4"
                             />
                         </div>
@@ -1875,10 +1870,9 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
                     <div className="lg:col-span-1 space-y-4">
                         {/* Difficulty */}
                         <Card className="p-6 text-center">
-                            <div className={`w-8 h-8 rounded-xl mx-auto mb-4 ${
-                                difficultyInfo.label === 'EASY' ? 'bg-emerald-400' : 
-                                difficultyInfo.label === 'MEDIUM' ? 'bg-amber-400' : 'bg-red-400'
-                            }`}></div>
+                            <div className={`w-8 h-8 rounded-xl mx-auto mb-4 ${difficultyInfo.label === 'EASY' ? 'bg-emerald-400' :
+                                    difficultyInfo.label === 'MEDIUM' ? 'bg-amber-400' : 'bg-red-400'
+                                }`}></div>
                             <h3 className="font-medium text-slate-700 mb-1">{difficultyInfo.label}</h3>
                             <p className="text-sm text-slate-500 font-light">{difficultyInfo.multiplier.toFixed(1)}x</p>
                         </Card>
@@ -1894,13 +1888,11 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
 
                         {/* Focus Status */}
                         <Card className="p-6 text-center">
-                            <div className={`w-3 h-3 rounded-full mx-auto mb-3 ${
-                                proctorWarnings === 0 ? 'bg-emerald-400' : 'bg-red-400'
-                            }`}></div>
+                            <div className={`w-3 h-3 rounded-full mx-auto mb-3 ${proctorWarnings === 0 ? 'bg-emerald-400' : 'bg-red-400'
+                                }`}></div>
                             <h3 className="font-medium text-slate-700">Focus</h3>
-                            <p className={`text-sm font-light ${
-                                proctorWarnings === 0 ? 'text-emerald-600' : 'text-red-600'
-                            }`}>
+                            <p className={`text-sm font-light ${proctorWarnings === 0 ? 'text-emerald-600' : 'text-red-600'
+                                }`}>
                                 {proctorWarnings === 0 ? 'Maintained' : `${proctorWarnings} Warning${proctorWarnings > 1 ? 's' : ''}`}
                             </p>
                         </Card>
@@ -1933,13 +1925,13 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
                                     {currentQuestion.text}
                                 </h3>
                             </div>
-                            
+
                             {/* AI Hint Section */}
                             {isDomainQuestion && (
                                 <div className="mb-6 flex justify-between items-center">
                                     <span className="text-slate-600 font-light">Need assistance? Request AI guidance</span>
-                                    <Button 
-                                        onClick={generateHint} 
+                                    <Button
+                                        onClick={generateHint}
                                         disabled={isHintLoading}
                                         variant="purple"
                                         className="text-sm"
@@ -1962,18 +1954,16 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
                                     <button
                                         key={index}
                                         onClick={() => setSelectedOption(option)}
-                                        className={`w-full p-4 text-left border rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 ${
-                                            selectedOption === option
+                                        className={`w-full p-4 text-left border rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 ${selectedOption === option
                                                 ? 'border-gray-500 bg-gray-100 shadow-[0_6px_20px_rgba(0,0,0,0.08)] font-medium'
                                                 : 'border-gray-200 bg-white hover:border-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_15px_rgba(0,0,0,0.08)]'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-center">
-                                            <div className={`w-6 h-6 rounded-lg border mr-4 flex items-center justify-center text-sm font-medium ${
-                                                selectedOption === option 
-                                                    ? 'border-blue-600 bg-blue-600 text-white' 
+                                            <div className={`w-6 h-6 rounded-lg border mr-4 flex items-center justify-center text-sm font-medium ${selectedOption === option
+                                                    ? 'border-blue-600 bg-blue-600 text-white'
                                                     : 'border-slate-500 bg-white text-slate-800'
-                                            }`}>
+                                                }`}>
                                                 {String.fromCharCode(65 + index)}
                                             </div>
                                             <span className="text-slate-700">{option}</span>
@@ -1983,9 +1973,9 @@ const QuizScreen = ({ session, handleAnswer, submitQuiz, proctorWarnings, increm
                             </div>
 
                             {/* Submit Button */}
-                            <Button 
-                                onClick={onSubmit} 
-                                disabled={selectedOption === null} 
+                            <Button
+                                onClick={onSubmit}
+                                disabled={selectedOption === null}
                                 variant="primary"
                                 className="w-full py-4 text-lg"
                             >
@@ -2009,7 +1999,7 @@ const ReportScreen = ({ session, finalScore, timeTaken, resetApp, currentUser, u
     const generateExplanation = useCallback(async (index) => {
         const result = results[index];
         if (!result) return;
-        
+
         // 1. Set loading state
         setResults(prev => prev.map((r, i) => i === index ? { ...r, isLoading: true } : r));
 
@@ -2022,19 +2012,19 @@ const ReportScreen = ({ session, finalScore, timeTaken, resetApp, currentUser, u
 
         try {
             const generatedExplanation = await callGroqApi(userQuery, systemPrompt);
-            
+
             // 2. Update the specific result with the explanation
-            setResults(prev => prev.map((r, i) => i === index ? { 
-                ...r, 
-                remediationText: generatedExplanation, 
-                isLoading: false 
+            setResults(prev => prev.map((r, i) => i === index ? {
+                ...r,
+                remediationText: generatedExplanation,
+                isLoading: false
             } : r));
 
         } catch (error) {
-            setResults(prev => prev.map((r, i) => i === index ? { 
-                ...r, 
-                remediationText: "Sorry, I couldn't generate a detailed explanation right now.", 
-                isLoading: false 
+            setResults(prev => prev.map((r, i) => i === index ? {
+                ...r,
+                remediationText: "Sorry, I couldn't generate a detailed explanation right now.",
+                isLoading: false
             } : r));
         }
     }, [results]);
@@ -2045,9 +2035,9 @@ const ReportScreen = ({ session, finalScore, timeTaken, resetApp, currentUser, u
                 {/* Header */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 mb-8 border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
                     <div className="flex items-center mb-4">
-                        <img 
-                            src="/atria logo.jpg" 
-                            alt="Atria University" 
+                        <img
+                            src="/atria-logo.jpg"
+                            alt="Atria University"
                             className="h-20 w-auto mr-4"
                         />
                         <div>
@@ -2065,7 +2055,7 @@ const ReportScreen = ({ session, finalScore, timeTaken, resetApp, currentUser, u
                             <p className="text-purple-600 text-xs mt-1">
                                 You completed both Part 1 (MCQ) and Part 2 (TAT Assessment)
                             </p>
-                            
+
                             {/* Toggle Buttons */}
                             <div className="flex gap-3 mt-4">
                                 <Button
@@ -2090,12 +2080,12 @@ const ReportScreen = ({ session, finalScore, timeTaken, resetApp, currentUser, u
                 {/* Conditional Rendering: MCQ Results or TAT Results */}
                 {showTATResults && session.tatCompleted ? (
                     // Show comprehensive TAT Results (reuse TATResultsScreen component logic)
-                    <TATResultsScreen 
-                        tatSession={{ 
+                    <TATResultsScreen
+                        tatSession={{
                             stories: session.tatResults?.stories || [],
                             cards: TAT_CARDS,
                             timeTaken: session.tatResults?.timeTaken || 0
-                        }} 
+                        }}
                         resetApp={() => setShowTATResults(false)}
                         hideBackButton={true}
                     />
@@ -2103,164 +2093,159 @@ const ReportScreen = ({ session, finalScore, timeTaken, resetApp, currentUser, u
                     <>
                         {/* Stats Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <Card className="p-6 text-center">
-                        <div className="w-12 h-12 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
-                            <div className="w-6 h-6 bg-white rounded-lg"></div>
-                        </div>
-                        <div className="text-3xl font-light text-slate-800 mb-2">{finalScore.toFixed(0)}</div>
-                        <p className="text-slate-600 font-light">Final Score</p>
-                    </Card>
+                            <Card className="p-6 text-center">
+                                <div className="w-12 h-12 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+                                    <div className="w-6 h-6 bg-white rounded-lg"></div>
+                                </div>
+                                <div className="text-3xl font-light text-slate-800 mb-2">{finalScore.toFixed(0)}</div>
+                                <p className="text-slate-600 font-light">Final Score</p>
+                            </Card>
 
-                    <Card className="p-6 text-center">
-                        <div className="w-12 h-12 bg-emerald-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
-                            <div className="w-6 h-6 bg-white rounded-lg"></div>
-                        </div>
-                        <div className="text-3xl font-light text-slate-800 mb-2">{correctAnswers}/{TOTAL_MCQ_QUESTIONS}</div>
-                        <p className="text-slate-600 font-light">Correct Answers (MCQ)</p>
-                    </Card>
+                            <Card className="p-6 text-center">
+                                <div className="w-12 h-12 bg-emerald-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+                                    <div className="w-6 h-6 bg-white rounded-lg"></div>
+                                </div>
+                                <div className="text-3xl font-light text-slate-800 mb-2">{correctAnswers}/{TOTAL_MCQ_QUESTIONS}</div>
+                                <p className="text-slate-600 font-light">Correct Answers (MCQ)</p>
+                            </Card>
 
-                    <Card className="p-6 text-center">
-                        <div className="w-12 h-12 bg-amber-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
-                            <div className="w-6 h-6 bg-white rounded-lg"></div>
+                            <Card className="p-6 text-center">
+                                <div className="w-12 h-12 bg-amber-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+                                    <div className="w-6 h-6 bg-white rounded-lg"></div>
+                                </div>
+                                <div className="text-3xl font-light text-slate-800 mb-2">{timeTaken.toFixed(1)}s</div>
+                                <p className="text-slate-600 font-light">Time Taken</p>
+                            </Card>
                         </div>
-                        <div className="text-3xl font-light text-slate-800 mb-2">{timeTaken.toFixed(1)}s</div>
-                        <p className="text-slate-600 font-light">Time Taken</p>
-                    </Card>
-                </div>
 
-                {/* Proctoring Status */}
-                <Card className="p-6 mb-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-medium text-slate-800 mb-2">Focus Monitoring</h3>
-                            <p className="text-slate-600 font-light">Assessment supervision status</p>
-                        </div>
-                        <div className="text-right">
-                            <div className={`inline-flex items-center px-4 py-2 rounded-xl ${
-                                session.proctorWarnings === 0 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'
-                            }`}>
-                                <div className={`w-2 h-2 rounded-full mr-2 ${
-                                    session.proctorWarnings === 0 ? 'bg-gray-500' : 'bg-gray-700'
-                                }`}></div>
-                                {session.proctorWarnings === 0 ? 'Maintained Focus' : `${session.proctorWarnings} Warning${session.proctorWarnings > 1 ? 's' : ''}`}
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Detailed Results */}
-                <Card className="p-8">
-                    <div className="flex items-center mb-6">
-                        <div className="w-3 h-8 bg-indigo-400 mr-4"></div>
-                        <h2 className="text-2xl font-medium text-slate-800">Part 1: MCQ Analysis</h2>
-                    </div>
-                    
-                    <div className="space-y-4">
-                        {results.map((result, index) => (
-                            <div key={result.question.id} className="border border-gray-200 rounded-xl p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-center mb-3">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium mr-4 ${
-                                                result.isCorrect 
-                                                    ? 'bg-green-600 text-white' 
-                                                    : 'bg-red-500 text-white'
-                                            }`}>
-                                                {index + 1}
-                                            </div>
-                                            <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                                                result.isCorrect 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-red-100 text-red-800'
-                                            }`}>
-                                                {result.isCorrect ? 'Correct' : 'Incorrect'}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-lg font-medium text-gray-800 mb-3 leading-relaxed">
-                                            {result.question.text}
-                                        </h3>
-                                        
-                                        <div className="space-y-2">
-                                            <div className="text-sm">
-                                                <span className="text-gray-600 font-light">Your answer: </span>
-                                                <span className={`font-medium ${
-                                                    result.isCorrect ? 'text-gray-700' : 'text-gray-800'
-                                                }`}>
-                                                    {result.userAnswer}
-                                                </span>
-                                            </div>
-                                            
-                                            {!result.isCorrect && (
-                                                <div className="text-sm">
-                                                    <span className="text-gray-600 font-light">Correct answer: </span>
-                                                    <span className="font-medium text-gray-800">
-                                                        {result.question.answer}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            
-                                            <div className="text-xs text-gray-500 pt-2">
-                                                {DIFFICULTY_LEVELS[result.difficulty].label} • {DIFFICULTY_LEVELS[result.difficulty].multiplier.toFixed(1)}x multiplier • {result.pointsEarned.toFixed(2)} points earned
-                                            </div>
-                                        </div>
+                        {/* Proctoring Status */}
+                        <Card className="p-6 mb-8">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-medium text-slate-800 mb-2">Focus Monitoring</h3>
+                                    <p className="text-slate-600 font-light">Assessment supervision status</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className={`inline-flex items-center px-4 py-2 rounded-xl ${session.proctorWarnings === 0
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-red-100 text-red-800'
+                                        }`}>
+                                        <div className={`w-2 h-2 rounded-full mr-2 ${session.proctorWarnings === 0 ? 'bg-gray-500' : 'bg-gray-700'
+                                            }`}></div>
+                                        {session.proctorWarnings === 0 ? 'Maintained Focus' : `${session.proctorWarnings} Warning${session.proctorWarnings > 1 ? 's' : ''}`}
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
 
-                                {!result.isCorrect && (
-                                    <div className="mt-4 pt-4 border-t border-gray-100">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <span className="text-gray-600 font-light">Need detailed explanation?</span>
-                                            <Button
-                                                onClick={() => generateExplanation(index)}
-                                                disabled={result.isLoading}
-                                                variant="purple"
-                                                className="px-4 py-2 text-sm"
-                                            >
-                                                {result.isLoading ? 'Analyzing...' : 'Get AI Explanation'}
-                                            </Button>
+                        {/* Detailed Results */}
+                        <Card className="p-8">
+                            <div className="flex items-center mb-6">
+                                <div className="w-3 h-8 bg-indigo-400 mr-4"></div>
+                                <h2 className="text-2xl font-medium text-slate-800">Part 1: MCQ Analysis</h2>
+                            </div>
+
+                            <div className="space-y-4">
+                                {results.map((result, index) => (
+                                    <div key={result.question.id} className="border border-gray-200 rounded-xl p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center mb-3">
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium mr-4 ${result.isCorrect
+                                                            ? 'bg-green-600 text-white'
+                                                            : 'bg-red-500 text-white'
+                                                        }`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <span className={`text-sm font-medium px-3 py-1 rounded-full ${result.isCorrect
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-red-100 text-red-800'
+                                                        }`}>
+                                                        {result.isCorrect ? 'Correct' : 'Incorrect'}
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-lg font-medium text-gray-800 mb-3 leading-relaxed">
+                                                    {result.question.text}
+                                                </h3>
+
+                                                <div className="space-y-2">
+                                                    <div className="text-sm">
+                                                        <span className="text-gray-600 font-light">Your answer: </span>
+                                                        <span className={`font-medium ${result.isCorrect ? 'text-gray-700' : 'text-gray-800'
+                                                            }`}>
+                                                            {result.userAnswer}
+                                                        </span>
+                                                    </div>
+
+                                                    {!result.isCorrect && (
+                                                        <div className="text-sm">
+                                                            <span className="text-gray-600 font-light">Correct answer: </span>
+                                                            <span className="font-medium text-gray-800">
+                                                                {result.question.answer}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="text-xs text-gray-500 pt-2">
+                                                        {DIFFICULTY_LEVELS[result.difficulty].label} • {DIFFICULTY_LEVELS[result.difficulty].multiplier.toFixed(1)}x multiplier • {result.pointsEarned.toFixed(2)} points earned
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        
-                                        {result.remediationText && (
-                                            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                                <p className="font-medium text-gray-700 mb-2">AI Analysis:</p>
-                                                <p className="text-gray-600 font-light leading-relaxed whitespace-pre-wrap">
-                                                    {result.remediationText}
-                                                </p>
+
+                                        {!result.isCorrect && (
+                                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="text-gray-600 font-light">Need detailed explanation?</span>
+                                                    <Button
+                                                        onClick={() => generateExplanation(index)}
+                                                        disabled={result.isLoading}
+                                                        variant="purple"
+                                                        className="px-4 py-2 text-sm"
+                                                    >
+                                                        {result.isLoading ? 'Analyzing...' : 'Get AI Explanation'}
+                                                    </Button>
+                                                </div>
+
+                                                {result.remediationText && (
+                                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                                        <p className="font-medium text-gray-700 mb-2">AI Analysis:</p>
+                                                        <p className="text-gray-600 font-light leading-relaxed whitespace-pre-wrap">
+                                                            {result.remediationText}
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
-                                )}
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </Card>
+                        </Card>
                     </>
                 )}
 
                 {/* Back Button */}
                 <div className="mt-8 text-center">
-                    <Button 
-                        onClick={resetApp} 
+                    <Button
+                        onClick={resetApp}
                         className="px-8 py-4 text-lg bg-gray-800 text-white hover:bg-gray-900 border-gray-800 shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8_25px_rgba(0,0,0,0.2)]"
                     >
                         Return to Dashboard
                     </Button>
-                    
+
                     {/* Peop360 Branding */}
                     <div className="mt-8">
                         <div className="flex items-center justify-center space-x-3">
                             <span className="text-base text-slate-600 font-light">Created by :</span>
-                            <a 
-                                href="https://www.peop360.com" 
-                                target="_blank" 
+                            <a
+                                href="https://www.peop360.com"
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:scale-105 transition-transform duration-300"
                             >
-                                <img 
-                                    src="/images/peop360-logo.png" 
-                                    alt="Peop360" 
+                                <img
+                                    src="/atria-logo.jpg"
+                                    alt="Peop360"
                                     className="h-8 w-auto"
                                 />
                             </a>
@@ -2289,10 +2274,10 @@ const App = () => {
 
     // Auto-login for direct stream routes
     useEffect(() => {
-        const isDirectStreamRoute = location.pathname === '/science' || 
-                                     location.pathname === '/non-science' ||
-                                     location.pathname === '/nonscience';
-        
+        const isDirectStreamRoute = location.pathname === '/science' ||
+            location.pathname === '/non-science' ||
+            location.pathname === '/nonscience';
+
         if (isAuthReady && !userRole && isDirectStreamRoute) {
             setUserRole({ role: 'student', id: userId });
             setView('studentDashboard');
@@ -2344,7 +2329,7 @@ const App = () => {
     const startTATAssessment = useCallback(() => {
         // Select 3 cards for TAT assessment
         const selectedCards = [...TAT_CARDS].sort(() => 0.5 - Math.random()).slice(0, 3);
-        
+
         setTATSession({
             cards: selectedCards,
             currentCardIndex: 0,
@@ -2359,7 +2344,7 @@ const App = () => {
     const startTATAssessmentFromMCQ = useCallback(() => {
         // Select 3 cards for TAT assessment as part of full assessment
         const selectedCards = [...TAT_CARDS].sort(() => 0.5 - Math.random()).slice(0, 3);
-        
+
         setTATSession({
             cards: selectedCards,
             currentCardIndex: 0,
@@ -2422,7 +2407,7 @@ const App = () => {
                 setTimeout(() => {
                     startTATAssessmentFromMCQ();
                 }, 100);
-                
+
                 return {
                     ...prev,
                     quizResults: newResults,
@@ -2462,7 +2447,7 @@ const App = () => {
         if (!quizSession) return;
 
         const timeTaken = (Date.now() - quizSession.startTime) / 1000;
-        
+
         // Final Score Calculation: Score is already calculated, we just incorporate time factor.
         // Penalty factor: 0.99 for every 10 seconds over 60 seconds average per question. (6 seconds per question is ideal)
         const idealTime = TOTAL_QUESTIONS * 10;
@@ -2501,7 +2486,7 @@ const App = () => {
         if (tatSession.fromMCQ && quizSession) {
             // Combine MCQ and TAT results for final report
             const totalTimeTaken = ((Date.now() - quizSession.startTime) / 1000);
-            
+
             // Final Score Calculation including TAT completion bonus
             const idealTime = TOTAL_MCQ_QUESTIONS * 10;
             const timeFactor = Math.max(0, 1 - (totalTimeTaken - idealTime) / (idealTime * 2));
@@ -2560,7 +2545,7 @@ const App = () => {
         setUserRole(null);
         setView('login');
     };
-    
+
     const resetApp = () => {
         setQuizSession(null);
         setTATSession(null);
@@ -2581,7 +2566,7 @@ const App = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const assignmentId = urlParams.get('assignment');
         const token = urlParams.get('token');
-        
+
         // If assignment parameters exist, verify access and set user role
         React.useEffect(() => {
             if (assignmentId && token && !userRole) {
@@ -2591,7 +2576,7 @@ const App = () => {
                         const API_URL = 'http://localhost:4902';
                         const response = await fetch(`${API_URL}/api/candidate/test/${assignmentId}?token=${token}`);
                         const data = await response.json();
-                        
+
                         if (data.success) {
                             setUserRole({ role: 'student', id: assignmentId });
                         }
@@ -2602,18 +2587,18 @@ const App = () => {
                 verifyAccess();
             }
         }, [assignmentId, token]);
-        
+
         if (!userRole) {
             return <LoadingSpinner />;
         }
         return <StreamAssessmentConfig stream="SCIENCE" startQuiz={startQuiz} />;
     };
-    
+
     const NonScienceRoute = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const assignmentId = urlParams.get('assignment');
         const token = urlParams.get('token');
-        
+
         // If assignment parameters exist, verify access and set user role
         React.useEffect(() => {
             if (assignmentId && token && !userRole) {
@@ -2623,7 +2608,7 @@ const App = () => {
                         const API_URL = 'http://localhost:4902';
                         const response = await fetch(`${API_URL}/api/candidate/test/${assignmentId}?token=${token}`);
                         const data = await response.json();
-                        
+
                         if (data.success) {
                             setUserRole({ role: 'student', id: assignmentId });
                         }
@@ -2634,18 +2619,18 @@ const App = () => {
                 verifyAccess();
             }
         }, [assignmentId, token]);
-        
+
         if (!userRole) {
             return <LoadingSpinner />;
         }
         return <StreamAssessmentConfig stream="NON_SCIENCE" startQuiz={startQuiz} />;
     };
-    
+
     // For direct /science or /non-science routes, skip login screen
-    const isDirectStreamRoute = location.pathname === '/science' || 
-                                 location.pathname === '/non-science' ||
-                                 location.pathname === '/nonscience';
-    
+    const isDirectStreamRoute = location.pathname === '/science' ||
+        location.pathname === '/non-science' ||
+        location.pathname === '/nonscience';
+
     if (view === 'login' && !isDirectStreamRoute) {
         return <LoginScreen setUserRole={setUserRole} isAuthReady={isAuthReady} currentUser={currentUser} userId={userIdDisplay} />;
     }
@@ -2656,17 +2641,17 @@ const App = () => {
 
     if (userRole?.role === 'student') {
         if (view === 'quiz') {
-            return <QuizScreen 
-                session={quizSession} 
-                handleAnswer={handleAnswer} 
+            return <QuizScreen
+                session={quizSession}
+                handleAnswer={handleAnswer}
                 submitQuiz={submitQuiz}
                 proctorWarnings={proctorWarnings}
                 incrementProctorWarning={incrementProctorWarning}
             />;
         }
         if (view === 'report') {
-            return <ReportScreen 
-                session={quizSession} 
+            return <ReportScreen
+                session={quizSession}
                 finalScore={quizSession.finalScore}
                 timeTaken={quizSession.timeTaken}
                 resetApp={resetApp}

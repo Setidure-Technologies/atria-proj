@@ -28,7 +28,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
       setError('Invalid password. Please try again.');
       setPassword('');
     }
-    
+
     setIsLoading(false);
   };
 

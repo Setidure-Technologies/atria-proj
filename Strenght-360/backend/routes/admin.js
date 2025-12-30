@@ -26,6 +26,7 @@ const {
     getDashboardStats,
     getResponseById,
     resetUserProgress,
+    getUsageStats,
 } = require('../services/database');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
@@ -1294,6 +1295,24 @@ router.post('/users/:id/reset', async (req, res) => {
     } catch (error) {
         console.error('Reset user error:', error);
         res.status(500).json({ success: false, error: 'Failed to reset user progress' });
+    }
+});
+
+
+
+
+// Get usage statistics
+router.get('/usage-stats', async (req, res) => {
+    try {
+        const { period } = req.query;
+        const stats = await getUsageStats(period);
+        res.json({
+            success: true,
+            stats
+        });
+    } catch (error) {
+        console.error('Error fetching usage stats:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch usage statistics' });
     }
 });
 

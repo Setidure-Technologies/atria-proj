@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiDB } from '../lib/apiDatabase';
 import { Database, Download, Trash2, LogOut, Shield, RefreshCw } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
 
 interface TestResponse {
@@ -24,17 +25,29 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [responses, setResponses] = useState<TestResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [serverStatus, setServerStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
+  const [usageStats, setUsageStats] = useState<any[]>([]);
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'year'>('month');
 
   useEffect(() => {
     loadResponses();
     checkServerStatus();
+    fetchUsageStats();
   }, []);
+
+  useEffect(() => {
+    fetchUsageStats();
+  }, [timeFilter]);
+
+  const fetchUsageStats = async () => {
+    const stats = await apiDB.getUsageStats(timeFilter);
+    setUsageStats(stats);
+  };
 
   const checkServerStatus = async () => {
     setServerStatus('checking');
     const isConnected = await apiDB.healthCheck();
     setServerStatus(isConnected ? 'connected' : 'disconnected');
-    
+
     // If server is back online, sync any fallback data
     if (isConnected) {
       const syncResult = await apiDB.syncFallbackData();
@@ -68,7 +81,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
     const excelData = responses.map(response => {
       // Create detailed response breakdown
       const responseDetails: { [key: string]: string | number } = {};
-      
+
       // Add detailed responses for each question
       if (response.responses && typeof response.responses === 'object') {
         for (const [questionId, resp] of Object.entries(response.responses)) {
@@ -147,6 +160,52 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Usage Statistics Graph */}
+        <div className="bg-white shadow rounded-lg mb-8 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-medium text-gray-900">Report Generation Statistics</h2>
+            <div className="flex space-x-2">
+              {['week', 'month', 'year'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setTimeFilter(p as 'week' | 'month' | 'year')}
+                  className={`px-3 py-1 text-sm rounded-md ${timeFilter === p
+                    ? 'bg-orange-100 text-orange-700 font-medium'
+                    : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={usageStats}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  cursor={{ fill: '#f3f4f6' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                />
+                <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -158,13 +217,12 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                 <div className="flex items-center gap-4">
                   <p className="text-gray-600">{responses.length} total responses</p>
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      serverStatus === 'connected' ? 'bg-green-500' : 
+                    <div className={`w-2 h-2 rounded-full ${serverStatus === 'connected' ? 'bg-green-500' :
                       serverStatus === 'disconnected' ? 'bg-red-500' : 'bg-yellow-500'
-                    }`}></div>
+                      }`}></div>
                     <span className="text-sm text-gray-500">
-                      {serverStatus === 'connected' ? 'Server Connected' : 
-                       serverStatus === 'disconnected' ? 'Server Offline (Fallback Mode)' : 'Checking...'}
+                      {serverStatus === 'connected' ? 'Server Connected' :
+                        serverStatus === 'disconnected' ? 'Server Offline (Fallback Mode)' : 'Checking...'}
                     </span>
                   </div>
                 </div>
@@ -178,7 +236,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                 <LogOut className="h-4 w-4 mr-2" />
                 {onLogout ? 'Logout' : 'Back to App'}
               </button>
-              
+
               <button
                 onClick={refreshData}
                 className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
@@ -186,7 +244,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </button>
-              
+
               <button
                 onClick={exportData}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"

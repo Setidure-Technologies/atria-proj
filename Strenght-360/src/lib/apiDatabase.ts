@@ -205,6 +205,16 @@ class ApiDatabase {
     }
   }
 
+  async getUsageStats(period: 'week' | 'month' | 'year' = 'month') {
+    try {
+      const result = await this.fetchApi(`/admin/usage-stats?period=${period}`);
+      return result.stats;
+    } catch (error) {
+      console.error('Error fetching usage stats:', error);
+      return [];
+    }
+  }
+
   async healthCheck() {
     try {
       const result = await this.fetchApi('/health');
