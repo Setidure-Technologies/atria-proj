@@ -470,8 +470,9 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
             const atriaBlue = '#1e40af';
             const atriaGreen = '#16a34a';
 
-            // Helper function for footer
-            const addFooter = (doc) => {
+            // Helper function for footer and watermark
+            const addPageElements = (doc) => {
+                // Footer
                 const bottomMargin = 30;
                 const savedY = doc.y;
                 doc.fontSize(10)
@@ -481,20 +482,34 @@ async function generateComprehensivePDF(processedData, outputFilename = "compreh
                 doc.fontSize(9)
                     .fillColor('#94a3b8')
                     .text('For more information, visit www.atriauniversity.edu.in', 50, doc.page.height - bottomMargin, { align: 'center', lineBreak: false });
+
+                // Watermark
+                const logoPath = path.join(__dirname, '..', 'public', 'atria-logo.jpg');
+                if (fs.existsSync(logoPath)) {
+                    const watermarkSize = 400;
+                    const x = (doc.page.width - watermarkSize) / 2;
+                    const y = (doc.page.height - watermarkSize) / 2;
+
+                    doc.save();
+                    doc.opacity(0.05); // Very subtle opacity
+                    doc.image(logoPath, x, y, { width: watermarkSize });
+                    doc.restore();
+                }
+
                 doc.y = savedY;
             };
 
-            // Add footer to the first page
-            addFooter(doc);
+            // Add elements to the first page
+            addPageElements(doc);
 
-            // Listen for new pages to add footer
+            // Listen for new pages to add elements
             doc.on('pageAdded', () => {
-                addFooter(doc);
+                addPageElements(doc);
             });
 
             // 1. Enhanced Visual Cover Page
-            // Add Logo
-            const logoPath = path.join(__dirname, '..', 'public', 'atria-logo2.png');
+            // Add Logo (Header)
+            const logoPath = path.join(__dirname, '..', 'public', 'atria-logo.jpg');
             if (fs.existsSync(logoPath)) {
                 doc.image(logoPath, doc.page.width / 2 - 40, 40, { width: 80 });
             }

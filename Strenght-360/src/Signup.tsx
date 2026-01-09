@@ -189,19 +189,18 @@ export default function Signup() {
                 {/* Progress Steps */}
                 <div className="flex justify-center mb-8">
                     <div className="flex items-center space-x-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step !== 'verify-token' ? 'bg-[#00C853] text-white' : 'bg-[#3B4DC9] text-white'
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === 'otp-verification' || step === 'complete' ? 'bg-[#00C853] text-white' : 'bg-[#3B4DC9] text-white'
                             }`}>
-                            {step !== 'verify-token' ? '✓' : '1'}
-                        </div>
-                        <div className="w-12 h-1 bg-gray-200" />
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === 'otp-verification' || step === 'complete' ? 'bg-[#00C853] text-white' :
-                            step === 'user-details' ? 'bg-[#3B4DC9] text-white' : 'bg-gray-200 text-gray-500'
-                            }`}>
-                            {step === 'otp-verification' || step === 'complete' ? '✓' : '2'}
+                            {step === 'otp-verification' || step === 'complete' ? '✓' : '1'}
                         </div>
                         <div className="w-12 h-1 bg-gray-200" />
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === 'complete' ? 'bg-[#00C853] text-white' :
-                            step === 'otp-verification' ? 'bg-[#3B4DC9] text-white' : 'bg-gray-200 text-gray-500'
+                                step === 'otp-verification' ? 'bg-[#3B4DC9] text-white' : 'bg-gray-200 text-gray-500'
+                            }`}>
+                            {step === 'complete' ? '✓' : '2'}
+                        </div>
+                        <div className="w-12 h-1 bg-gray-200" />
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === 'complete' ? 'bg-[#00C853] text-white' : 'bg-gray-200 text-gray-500'
                             }`}>
                             {step === 'complete' ? '✓' : '3'}
                         </div>

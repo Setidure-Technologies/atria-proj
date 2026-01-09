@@ -936,14 +936,37 @@ module.exports = {
     getUserWithRoles,
     createUser,
     updateUser,
+    listUsers,
+    verifyPassword,
     updatePassword,
+    updateLastLogin,
+
+    createTest,
+    getTestById,
+    listTests,
+    updateTest,
+
     createAssignment,
+    getAssignmentById,
+    getAssignmentByToken,
+    getUserAssignments,
+    updateAssignmentStatus,
+    listAssignments,
 
     createResponse,
-    listResponses,
-    getResponseById,
     getResponseByAssignmentId,
+    getResponseById,
+    listResponses,
+
     queueEmail,
+
+    createInvitation,
+    getInvitationByToken,
+    markInvitationUsed,
+
+    logAuditAction,
+    getAuditLogs,
+
     getDashboardStats,
     resetUserProgress,
     getUsageStats,

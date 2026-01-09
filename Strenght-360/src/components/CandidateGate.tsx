@@ -6,6 +6,7 @@ import { apiDB } from '../lib/apiDatabase';
 interface UserInfo {
     name: string;
     email: string;
+    phone?: string;
 }
 
 interface VerificationStatus {
@@ -317,7 +318,16 @@ export default function CandidateGate() {
                     </div>
                 )}
 
-                <StudentInfo onStart={handleStart} initialData={profileData} />
+                <StudentInfo
+                    onStart={handleStart}
+                    initialData={{
+                        ...profileData,
+                        // Merge userInfo if available and not already in profileData
+                        name: profileData?.name || userInfo?.name || '',
+                        email: profileData?.email || userInfo?.email || '',
+                        phone: profileData?.phone || userInfo?.phone || '', // This fixes the phone redundancy
+                    }}
+                />
             </div>
         );
     }

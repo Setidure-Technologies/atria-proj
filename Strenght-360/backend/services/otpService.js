@@ -18,7 +18,7 @@ const OTP_EXPIRY_MINUTES = 10;   // OTP valid for 10 minutes
 const sendOTPEmail = async (email, otp) => {
     const htmlBody = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">ATRIA 360 Verification Code</h2>
+        <h2 style="color: #2563eb;">Atria University Verification Code</h2>
         <p>Your verification code is:</p>
         <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1f2937;">${otp}</span>
@@ -30,9 +30,9 @@ const sendOTPEmail = async (email, otp) => {
 
     await queueEmail({
         toEmail: email,
-        subject: 'Your ATRIA 360 Verification Code',
+        subject: 'Your Atria University Verification Code',
         bodyHtml: htmlBody,
-        bodyText: `Your ATRIA 360 verification code is: ${otp}. This code expires in ${OTP_EXPIRY_MINUTES} minutes.`,
+        bodyText: `Your Atria University verification code is: ${otp}. This code expires in ${OTP_EXPIRY_MINUTES} minutes.`,
         templateName: 'otp',
         templateData: { otp, expiresInMinutes: OTP_EXPIRY_MINUTES },
     });

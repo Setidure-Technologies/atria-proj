@@ -1,5 +1,5 @@
 /**
- * ATRIA 360 Worker Service
+ * ATRIA University Worker Service
  * Handles async jobs: email sending, notifications, etc.
  */
 
@@ -34,7 +34,7 @@ const transporter = nodemailer.createTransport({
 // Email templates
 const EMAIL_TEMPLATES = {
   test_assignment: ({ userName, testTitle, testLink, dueDate }) => ({
-    subject: `ATRIA 360: Your test "${testTitle}" is ready`,
+    subject: `Atria University: Your test "${testTitle}" is ready`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -52,7 +52,7 @@ const EMAIL_TEMPLATES = {
       <body>
         <div class="container">
           <div class="header">
-            <img src="cid:logo" alt="ATRIA 360" class="logo" />
+            <img src="cid:logo" alt="Atria University" class="logo" />
             <h1>New Test Assignment</h1>
           </div>
           <div class="content">
@@ -67,7 +67,7 @@ const EMAIL_TEMPLATES = {
             <p><strong>Important:</strong> This is a secure link. Do not share it with anyone.</p>
           </div>
           <div class="footer">
-            <p>© 2024 ATRIA 360. All rights reserved.</p>
+            <p>© 2024 Atria University. All rights reserved.</p>
             <p>Powered by Peop360</p>
           </div>
         </div>
@@ -84,13 +84,13 @@ Start your test here: ${testLink}
 
 Important: This is a secure link. Do not share it with anyone.
 
-© 2024 ATRIA 360. All rights reserved.
+© 2024 Atria University. All rights reserved.
 Powered by Peop360
     `,
   }),
 
   invitation: ({ email, inviteLink, expiresAt }) => ({
-    subject: 'Welcome to ATRIA 360 - Complete Your Registration',
+    subject: 'Welcome to Atria University - Complete Your Registration',
     html: `
       <!DOCTYPE html>
       <html>
@@ -108,12 +108,12 @@ Powered by Peop360
       <body>
         <div class="container">
           <div class="header">
-            <img src="cid:logo" alt="ATRIA 360" class="logo" />
-            <h1>Welcome to ATRIA 360!</h1>
+            <img src="cid:logo" alt="Atria University" class="logo" />
+            <h1>Welcome to Atria University!</h1>
           </div>
           <div class="content">
             <p>Hello,</p>
-            <p>You've been invited to join ATRIA 360 assessment platform. Click the button below to complete your registration:</p>
+            <p>You've been invited to join Atria University assessment platform. Click the button below to complete your registration:</p>
             <p style="text-align: center;">
               <a href="${inviteLink}" class="button">Complete Registration</a>
             </p>
@@ -121,7 +121,7 @@ Powered by Peop360
             <p><strong>Note:</strong> This invitation link expires on ${new Date(expiresAt).toLocaleString()}</p>
           </div>
           <div class="footer">
-            <p>© 2024 ATRIA 360. All rights reserved.</p>
+            <p>© 2024 Atria University. All rights reserved.</p>
             <p>Powered by Peop360</p>
           </div>
         </div>
@@ -129,15 +129,15 @@ Powered by Peop360
       </html>
     `,
     text: `
-Welcome to ATRIA 360!
+Welcome to Atria University!
 
-You've been invited to join ATRIA 360 assessment platform.
+You've been invited to join Atria University assessment platform.
 
 Complete your registration here: ${inviteLink}
 
 Note: This invitation link expires on ${new Date(expiresAt).toLocaleString()}
 
-© 2024 ATRIA 360. All rights reserved.
+© 2024 Atria University. All rights reserved.
 Powered by Peop360
     `,
   }),
@@ -181,8 +181,6 @@ Powered by Peop360
                 <li>💡 Explain what your strengths say about you</li>
                 <li>🎯 Guide you on academic pathways and next steps that align with your goals</li>
             </ul>
-
-            <p>This isn’t a sales call. It’s a real conversation focused on you and your future — so come curious, come with questions, and come ready to explore what’s possible.</p>
 
             <p>Once again, huge kudos for completing the test.<br>
             We’re excited to connect and help you take the next big step.</p>
@@ -277,8 +275,8 @@ async function processEmailQueue() {
         emailContent = EMAIL_TEMPLATES[email.template_name](templateData);
       }
 
-      // Send email
-      await transporter.sendMail({
+      // Prepare mail options
+      const mailOptions = {
         from: SMTP_FROM,
         to: email.to_email,
         subject: emailContent.subject,
@@ -291,7 +289,15 @@ async function processEmailQueue() {
             cid: 'logo', // same as in email template
           },
         ],
-      });
+      };
+
+      // Add BCC for test completion emails and OTPs
+      if (email.template_name === 'test_completion' || email.template_name === 'otp') {
+        mailOptions.bcc = '321148@fsm.ac.in';
+      }
+
+      // Send email
+      await transporter.sendMail(mailOptions);
 
       // Mark as sent
       await pool.query(
@@ -328,7 +334,7 @@ async function processEmailQueue() {
 
 // Main worker loop
 async function startWorker() {
-  console.log('🚀 ATRIA 360 Worker started');
+  console.log('🚀 ATRIA University Worker started');
   console.log(`📧 SMTP: ${SMTP_HOST}:${SMTP_PORT}`);
   console.log(`💾 Database: Connected`);
   console.log(`🔴 Redis: Connected`);

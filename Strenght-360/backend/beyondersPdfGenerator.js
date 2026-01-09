@@ -18,6 +18,30 @@ function generateBeyondersPDF(data) {
             });
 
             // Header
+            const logoPath = require('path').join(__dirname, '..', 'public', 'atria-logo.jpg');
+
+            // Watermark function
+            const addWatermark = () => {
+                if (require('fs').existsSync(logoPath)) {
+                    const watermarkSize = 400;
+                    const x = (doc.page.width - watermarkSize) / 2;
+                    const y = (doc.page.height - watermarkSize) / 2;
+
+                    doc.save();
+                    doc.opacity(0.05); // Very subtle opacity
+                    doc.image(logoPath, x, y, { width: watermarkSize });
+                    doc.restore();
+                }
+            };
+
+            // Add watermark to first page
+            addWatermark();
+
+            // Add watermark to subsequent pages
+            doc.on('pageAdded', () => {
+                addWatermark();
+            });
+
             doc.fontSize(24).fillColor('#2563eb').text('Beyonders 360 Assessment', { align: 'center' });
             doc.moveDown(0.5);
             doc.fontSize(16).fillColor('#64748b').text(data.test_title, { align: 'center' });

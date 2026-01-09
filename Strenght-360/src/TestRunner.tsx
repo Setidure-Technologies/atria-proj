@@ -250,8 +250,19 @@ function TestRunner({ assignmentId, token }: TestRunnerProps) {
           minutesLeft={warningMinutes}
           onClose={() => setShowWarning(false)}
         />
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4">
-          <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4 relative">
+          {/* Watermark Overlay */}
+          <div
+            className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center opacity-[0.03]"
+            style={{
+              backgroundImage: 'url(/atria-logo.jpg)',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              backgroundSize: '50% auto'
+            }}
+          />
+
+          <div className="max-w-4xl mx-auto relative z-10">
             <div className="mb-6 flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-2">
